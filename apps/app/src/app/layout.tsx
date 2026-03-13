@@ -33,7 +33,7 @@ export default function RootLayout({
                 <main
                   style={{
                     paddingTop: '58px',
-                    paddingBottom: '72px',
+                    paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))',
                     minHeight: '100%',
                   }}
                 >

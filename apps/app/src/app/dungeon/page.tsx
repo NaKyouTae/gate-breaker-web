@@ -117,7 +117,8 @@ export default function DungeonListPage() {
       const dg = dungeons.find(dd => dd.id === dungeonId);
       const minLv = dg?.minLevel ?? 1;
       const maxLv = dg?.maxLevel ?? 1;
-      router.push(`/battle?dungeonId=${dungeonId}&minLv=${minLv}&maxLv=${maxLv}`);
+      const dgName = dg?.name ?? '';
+      router.push(`/battle?dungeonId=${dungeonId}&minLv=${minLv}&maxLv=${maxLv}&dgName=${encodeURIComponent(dgName)}`);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '던전 입장에 실패했습니다.';
       addToast(message, 'error');
@@ -304,6 +305,7 @@ export default function DungeonListPage() {
             onClick={() => {
               const params = new URLSearchParams();
               params.set('dungeonId', ongoingBattle.dungeonId);
+              params.set('dgName', ongoingBattle.dungeonName);
               if (
                 typeof ongoingBattle.totalMonsters === 'number' &&
                 typeof ongoingBattle.currentMonsterNum === 'number'

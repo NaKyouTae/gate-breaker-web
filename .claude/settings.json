@@ -38,7 +38,9 @@
       "Bash(wc -l /Users/nakyutae/personal/git/workfolio-backend/src/main/kotlin/com/spectrum/workfolio/controllers/*.kt)",
       "Bash(grep -r \"schedule\\\\|quartz\\\\|batch\\\\|job\\\\|cron\" /Users/nakyutae/personal/git/workfolio-backend/src/main/kotlin --include=*.kt -l)",
       "Bash(find /Users/nakyutae/personal/git/workfolio-backend/src/main/kotlin -type f -name \"*.kt\" -exec grep -l \"@Bean\\\\|fun.*\\\\\\(\\\\\\)\" {})",
-      "Bash(grep -r \"fun \\\\|@\\\\|schedule\\\\|quartz\\\\|batch\" /Users/nakyutae/personal/git/workfolio-backend/src/main/resources --include=*.properties)"
+      "Bash(grep -r \"fun \\\\|@\\\\|schedule\\\\|quartz\\\\|batch\" /Users/nakyutae/personal/git/workfolio-backend/src/main/resources --include=*.properties)",
+      "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-server/src -type f \\\\\\(-name *.ts -o -name *.js \\\\\\))",
+      "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")"
     ],
     "additionalDirectories": [
       "/Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/admin/.next",

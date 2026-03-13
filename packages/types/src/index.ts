@@ -138,6 +138,7 @@ export interface BattleSession {
   log: BattleLogEntry[];
   result: BattleResult | null;
   rewards?: { exp: number; gold: number; items: Item[] };
+  penalty?: { previousExp: number; expLost: number; currentExp: number; goldLost: number } | null;
 }
 
 export interface BattleLogEntry {

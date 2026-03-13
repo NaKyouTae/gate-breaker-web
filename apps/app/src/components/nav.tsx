@@ -220,6 +220,47 @@ export function TopHud() {
               >
                 {user.nickname}
               </span>
+              <div
+                style={{
+                  position: 'relative',
+                  width: '80px',
+                  height: '14px',
+                  background: 'rgba(255,255,255,0.08)',
+                  borderRadius: '7px',
+                  overflow: 'hidden',
+                  flexShrink: 0,
+                }}
+              >
+                <div
+                  style={{
+                    width: `${user.maxHp > 0 ? Math.min((user.hp / user.maxHp) * 100, 100) : 0}%`,
+                    height: '100%',
+                    background: 'linear-gradient(90deg, #dc2626, #ef4444)',
+                    borderRadius: '7px',
+                    transition: 'width 0.5s ease',
+                    boxShadow: '0 0 4px rgba(220,38,38,0.5)',
+                  }}
+                />
+                <span
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '8px',
+                    fontWeight: 700,
+                    color: '#fff',
+                    textShadow: '0 0 2px rgba(0,0,0,0.8)',
+                    lineHeight: 1,
+                  }}
+                >
+                  {user.hp} / {user.maxHp}
+                </span>
+              </div>
             </div>
             <div
               style={{
@@ -309,8 +350,7 @@ export function BottomNav() {
           display: 'flex',
           justifyContent: 'space-around',
           alignItems: 'center',
-          padding: '4px 0 env(safe-area-inset-bottom, 8px)',
-          height: '64px',
+          padding: '8px 0 calc(8px + env(safe-area-inset-bottom, 0px))',
         }}
       >
         {navItems.map((item) => {

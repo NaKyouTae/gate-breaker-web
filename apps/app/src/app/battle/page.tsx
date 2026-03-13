@@ -2,8 +2,8 @@
 
 import { Suspense, useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { battle as battleApi, dungeon as dungeonApi } from '@gate-breaker/api-client';
-import type { BattleSession } from '@gate-breaker/types';
+import { battle as battleApi, dungeon as dungeonApi, inventory as inventoryApi } from '@gate-breaker/api-client';
+import type { BattleSession, InventoryItem } from '@gate-breaker/types';
 import { Button, Spinner, Modal, useToast } from '@gate-breaker/ui';
 import { useAuth } from '@/context/auth-context';
 
@@ -73,6 +73,7 @@ function HpBar({
 /* ─── Dungeon progress state ─── */
 interface DungeonProgress {
   dungeonId: string;
+  dungeonName: string;
   totalMonsters: number;
   currentMonsterIndex: number;
   defeatedMonsters: string[];
@@ -99,7 +100,7 @@ function clearDungeonProgress() {
 }
 
 function BattleContent() {
-  const { isLoading: authLoading, isAuthenticated, user: authUser } = useAuth();
+  const { isLoading: authLoading, isAuthenticated, user: authUser, refreshUser } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { addToast } = useToast();
@@ -122,6 +123,15 @@ function BattleContent() {
   const [playerHitFlash, setPlayerHitFlash] = useState(false);
   const [playerDamageNumber, setPlayerDamageNumber] = useState<number | null>(null);
   const [showEscapeScreen, setShowEscapeScreen] = useState(false);
+  const [showBagModal, setShowBagModal] = useState(false);
+  const [bagItems, setBagItems] = useState<InventoryItem[]>([]);
+  const [bagLoading, setBagLoading] = useState(false);
+  const [usingItem, setUsingItem] = useState(false);
+  const [autoAttack, setAutoAttack] = useState(false);
+  const autoAttackRef = useRef(false);
+  autoAttackRef.current = autoAttack;
+  const actingRef = useRef(false);
+  actingRef.current = acting;
   const transitioningRef = useRef(false);
   // Use refs to access latest state in async functions without re-creating callbacks
   const sessionRef = useRef(session);
@@ -159,6 +169,7 @@ function BattleContent() {
     if (dungeonId && (!existing || existing.dungeonId !== dungeonId)) {
       const minLv = Number(searchParams.get('minLv')) || 1;
       const maxLv = Number(searchParams.get('maxLv')) || minLv;
+      const dgName = searchParams.get('dgName') || '';
       const monsterCount = Math.floor(Math.random() * 3) + 3;
       const total = hasResumeProgress ? resumeTotalRaw : monsterCount + 1;
       const currentMonsterIndex = hasResumeProgress ? resumeIndexRaw : 0;
@@ -168,6 +179,7 @@ function BattleContent() {
       });
       const progress: DungeonProgress = {
         dungeonId,
+        dungeonName: dgName,
         totalMonsters: total,
         currentMonsterIndex,
         defeatedMonsters: Array.from({ length: currentMonsterIndex }, (_, i) => `defeated-${i + 1}`),
@@ -185,6 +197,7 @@ function BattleContent() {
       ) {
         const synced: DungeonProgress = {
           ...existing,
+          dungeonName: searchParams.get('dgName') || existing.dungeonName || '',
           currentMonsterIndex: resumeIndexRaw,
           totalMonsters: resumeTotalRaw,
           defeatedMonsters: Array.from({ length: resumeIndexRaw }, (_, i) => `defeated-${i + 1}`),
@@ -416,6 +429,28 @@ function BattleContent() {
     }
   }, [acting, session, addToast, tryRecoverSession, router]);
 
+  // Auto-attack loop
+  useEffect(() => {
+    if (!autoAttack || !session || !!session.result) {
+      return;
+    }
+    const interval = setInterval(() => {
+      if (!autoAttackRef.current) return;
+      if (actingRef.current || transitioningRef.current) return;
+      if (sessionRef.current?.result) {
+        setAutoAttack(false);
+        return;
+      }
+      handleAttack();
+    }, 1500);
+    return () => clearInterval(interval);
+  }, [autoAttack, session?.result, handleAttack]);
+
+  // Turn off auto-attack on battle end
+  useEffect(() => {
+    if (session?.result) setAutoAttack(false);
+  }, [session?.result]);
+
   const handleEscape = useCallback(async () => {
     if (acting || !session || session.result || transitioningRef.current) return;
     setActing(true);
@@ -446,19 +481,69 @@ function BattleContent() {
   const handleDefeatConfirm = useCallback(async () => {
     try { await battleApi.confirm(); } catch { /* ignore */ }
     clearDungeonProgress();
+    await refreshUser();
     router.push('/dungeon');
-  }, [router]);
+  }, [router, refreshUser]);
 
-  const handleEscapeConfirm = useCallback(() => {
+  const handleEscapeConfirm = useCallback(async () => {
     setShowEscapeScreen(false);
+    await refreshUser();
     router.push('/dungeon');
-  }, [router]);
+  }, [router, refreshUser]);
 
-  const handleDungeonClearConfirm = useCallback(() => {
+  const handleOpenBag = useCallback(async () => {
+    if (acting || !session || session.result || transitioningRef.current) return;
+    setBagLoading(true);
+    setShowBagModal(true);
+    try {
+      const items = await inventoryApi.list();
+      setBagItems(items.filter(i => i.item.type === 'CONSUMABLE' && i.quantity > 0));
+    } catch {
+      addToast('가방을 열 수 없습니다.', 'error');
+      setShowBagModal(false);
+    } finally {
+      setBagLoading(false);
+    }
+  }, [acting, session, addToast]);
+
+  const handleUseItem = useCallback(async () => {
+    if (usingItem || !session || session.result) return;
+    setUsingItem(true);
+    const prevPlayerHp = session.playerHp;
+    try {
+      await battleApi.item();
+      const updated = await battleApi.status();
+
+      const healAmount = updated.playerHp - prevPlayerHp;
+
+      setSession(updated);
+      setShowBagModal(false);
+
+      if (healAmount > 0) {
+        addToast(`HP가 ${healAmount} 회복되었습니다!`, 'success');
+      }
+
+      // Refresh bag items
+      const items = await inventoryApi.list();
+      setBagItems(items.filter(i => i.item.type === 'CONSUMABLE' && i.quantity > 0));
+
+      if (updated.result && updated.result !== 'VICTORY') {
+        setShowDefeatModal(true);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : '아이템 사용에 실패했습니다.';
+      addToast(msg, 'error');
+    } finally {
+      setUsingItem(false);
+    }
+  }, [usingItem, session, addToast]);
+
+  const handleDungeonClearConfirm = useCallback(async () => {
     setShowDungeonClear(false);
     setTotalRewards({ exp: 0, gold: 0, items: [] });
+    await refreshUser();
     router.push('/dungeon');
-  }, [router]);
+  }, [router, refreshUser]);
 
   if (authLoading || loading) {
     return (
@@ -490,7 +575,7 @@ function BattleContent() {
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 100,
+        zIndex: 150,
         background: '#0a0a0f',
         display: 'flex',
         flexDirection: 'column',
@@ -603,8 +688,8 @@ function BattleContent() {
       `}</style>
 
       {/* ─── Top: Dungeon Progress + Enemy ─── */}
-      <div style={{ flexShrink: 0, paddingTop: 'calc(58px + env(safe-area-inset-top))' }}>
-        {/* Dungeon Progress Bar */}
+      <div style={{ flexShrink: 0, paddingTop: 'env(safe-area-inset-top)' }}>
+        {/* Dungeon Name + Progress Bar */}
         {progress && (
           <div
             style={{
@@ -612,10 +697,16 @@ function BattleContent() {
               background: 'rgba(26,26,46,0.9)',
               borderBottom: '1px solid rgba(255,255,255,0.06)',
               display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
+              flexDirection: 'column',
+              gap: '6px',
             }}
           >
+            {progress.dungeonName && (
+              <span style={{ fontSize: '11px', fontWeight: 700, color: '#a78bfa', letterSpacing: '0.5px' }}>
+                {progress.dungeonName}
+              </span>
+            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ fontSize: '10px', color: '#888', fontWeight: 600, whiteSpace: 'nowrap' }}>
               {currentMonsterNum}/{totalMonsters}
             </span>
@@ -643,6 +734,7 @@ function BattleContent() {
             {isBossMonster && (
               <span style={{ fontSize: '9px', fontWeight: 800, color: '#e94560', letterSpacing: '1px' }}>BOSS</span>
             )}
+            </div>
           </div>
         )}
 
@@ -743,7 +835,7 @@ function BattleContent() {
       <div style={{ flex: 1 }} />
 
       {/* ─── Bottom Fixed: Player + Log + Buttons ─── */}
-      <div style={{ flexShrink: 0, paddingBottom: 'calc(64px + env(safe-area-inset-bottom))' }}>
+      <div style={{ flexShrink: 0, paddingBottom: 'env(safe-area-inset-bottom)' }}>
         {/* Player Area */}
         <div
           style={{
@@ -842,6 +934,61 @@ function BattleContent() {
 
         {/* Action Buttons */}
         <div style={{ padding: '6px 14px 10px' }}>
+          {/* Auto Attack Toggle */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+              marginBottom: '6px',
+              paddingRight: '2px',
+            }}
+          >
+            <button
+              onClick={() => setAutoAttack(prev => !prev)}
+              disabled={!!session.result || transitioning}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: 'none',
+                border: 'none',
+                cursor: session.result || transitioning ? 'default' : 'pointer',
+                padding: '4px 8px',
+                borderRadius: '6px',
+                opacity: session.result || transitioning ? 0.35 : 1,
+              }}
+            >
+              <span style={{ fontSize: '11px', color: autoAttack ? '#fbbf24' : '#666', fontWeight: 600 }}>
+                자동 공격
+              </span>
+              <div
+                style={{
+                  width: '34px',
+                  height: '18px',
+                  borderRadius: '9px',
+                  background: autoAttack ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : '#333',
+                  border: `1px solid ${autoAttack ? '#f59e0b' : '#555'}`,
+                  position: 'relative',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <div
+                  style={{
+                    width: '14px',
+                    height: '14px',
+                    borderRadius: '50%',
+                    background: autoAttack ? '#fff' : '#888',
+                    position: 'absolute',
+                    top: '1px',
+                    left: autoAttack ? '17px' : '1px',
+                    transition: 'all 0.2s ease',
+                    boxShadow: autoAttack ? '0 0 4px rgba(251,191,36,0.5)' : 'none',
+                  }}
+                />
+              </div>
+            </button>
+          </div>
           <div
             style={{
               display: 'grid',
@@ -862,17 +1009,19 @@ function BattleContent() {
             >
               ▶ 공격
             </Button>
-            <Button variant="ghost" size="lg" disabled style={{ borderRadius: '8px', opacity: 0.35, fontWeight: 700, fontSize: '13px', padding: '10px 0' }}>
-              가방
-            </Button>
-            <Button variant="secondary" size="lg" disabled style={{ borderRadius: '8px', opacity: 0.35, fontWeight: 700, fontSize: '13px', padding: '10px 0' }}>
-              스킬
+            <Button
+              variant="ghost" size="lg"
+              onClick={handleOpenBag}
+              disabled={acting || !!session.result || transitioning}
+              style={{ borderRadius: '8px', fontWeight: 700, fontSize: '13px', padding: '10px 0' }}
+            >
+              🎒 가방
             </Button>
             <Button
               variant="danger" size="lg"
               onClick={handleEscape}
               disabled={acting || !!session.result || transitioning || isBossMonster}
-              style={{ borderRadius: '8px', fontWeight: 700, fontSize: '13px', padding: '10px 0', opacity: isBossMonster ? 0.35 : undefined }}
+              style={{ borderRadius: '8px', fontWeight: 700, fontSize: '13px', padding: '10px 0', opacity: isBossMonster ? 0.35 : undefined, gridColumn: 'span 2' }}
             >
               {isBossMonster ? '도주 불가' : '도망치다'}
             </Button>
@@ -880,14 +1029,151 @@ function BattleContent() {
         </div>
       </div>
 
-      {/* ─── Defeat Modal ─── */}
-      <Modal isOpen={showDefeatModal && session.result === 'DEFEAT'} onClose={() => {}} title={resultTitle}>
-        <div style={{ textAlign: 'center' }}>
-          <p style={{ fontSize: '1.6rem', fontWeight: 900, color: resultColor, margin: '8px 0 12px' }}>{resultTitle}</p>
-          <p style={{ color: '#888', fontSize: '12px', marginBottom: '12px' }}>전투에서 패배하였습니다. 다시 도전해보세요.</p>
-          <Button variant="primary" size="lg" onClick={handleDefeatConfirm} style={{ width: '100%' }}>확인</Button>
+      {/* ─── Bag Modal ─── */}
+      <Modal isOpen={showBagModal} onClose={() => setShowBagModal(false)} title="🎒 가방">
+        <div>
+          <p style={{ fontSize: '11px', color: '#888', marginBottom: '10px', textAlign: 'center' }}>소비 아이템</p>
+          {bagLoading ? (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
+              <Spinner size="md" />
+            </div>
+          ) : bagItems.length === 0 ? (
+            <p style={{ color: '#555', fontSize: '13px', textAlign: 'center', padding: '20px 0' }}>
+              사용 가능한 소비 아이템이 없습니다.
+            </p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '260px', overflowY: 'auto' }}>
+              {bagItems.map(inv => (
+                <div
+                  key={inv.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    background: 'rgba(255,255,255,0.03)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: '8px',
+                    padding: '10px 12px',
+                  }}
+                >
+                  <div style={{
+                    width: '36px', height: '36px', borderRadius: '6px',
+                    background: 'rgba(46,204,113,0.15)', border: '1px solid rgba(46,204,113,0.3)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0,
+                  }}>
+                    {inv.item.imageUrl ? (
+                      <img src={inv.item.imageUrl} alt={inv.item.name} style={{ width: '28px', height: '28px', objectFit: 'cover', borderRadius: '4px' }} />
+                    ) : '🧪'}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '13px', fontWeight: 700, color: '#eee' }}>{inv.item.name}</div>
+                    <div style={{ fontSize: '10px', color: '#888', marginTop: '2px' }}>
+                      {inv.item.description || 'HP를 회복합니다.'} · <span style={{ color: '#aaa' }}>x{inv.quantity}</span>
+                    </div>
+                  </div>
+                  <Button
+                    variant="primary" size="sm"
+                    onClick={handleUseItem}
+                    loading={usingItem}
+                    disabled={usingItem}
+                    style={{ borderRadius: '6px', fontSize: '12px', fontWeight: 700, padding: '6px 14px', flexShrink: 0 }}
+                  >
+                    사용
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </Modal>
+
+      {/* ─── Defeat Fullscreen ─── */}
+      {showDefeatModal && session.result === 'DEFEAT' && (
+        <div
+          onClick={handleDefeatConfirm}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 200,
+            background: 'linear-gradient(180deg, rgba(5,5,15,0.97), rgba(15,5,10,0.99), rgba(5,5,15,0.97))',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '40px 24px',
+            animation: 'clearFadeIn 0.5s ease',
+            cursor: 'pointer',
+          }}
+        >
+          <div style={{ fontSize: '72px', animation: 'clearTrophyBounce 0.8s ease-out', marginBottom: '16px' }}>💀</div>
+          <p
+            style={{
+              fontSize: '2rem', fontWeight: 900,
+              color: '#e94560',
+              textShadow: '0 0 20px rgba(233,69,96,0.4)',
+              margin: '0 0 32px',
+              animation: 'clearSlideUp 0.6s ease-out 0.3s both',
+              textAlign: 'center',
+            }}
+          >
+            패배...
+          </p>
+          <div
+            style={{
+              width: '100%', maxWidth: '340px',
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(233,69,96,0.15)',
+              borderRadius: '12px',
+              padding: '20px',
+              animation: 'clearSlideUp 0.6s ease-out 0.5s both',
+            }}
+          >
+            <h4 style={{ margin: '0 0 14px', fontSize: '13px', fontWeight: 700, color: '#e94560', textAlign: 'center', letterSpacing: '2px' }}>
+              PENALTY
+            </h4>
+            {session.penalty && (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', fontSize: '14px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                  <span style={{ color: '#888' }}>이전 경험치</span>
+                  <span style={{ color: '#aaa', fontWeight: 700 }}>{session.penalty.previousExp.toLocaleString()} EXP</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', fontSize: '14px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                  <span style={{ color: '#888' }}>경험치 패널티 <span style={{ color: '#e94560' }}>(-10%)</span></span>
+                  <span style={{ color: '#e94560', fontWeight: 700 }}>-{session.penalty.expLost.toLocaleString()} EXP</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', fontSize: '14px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                  <span style={{ color: '#888' }}>현재 경험치</span>
+                  <span style={{ color: '#f39c12', fontWeight: 700 }}>{session.penalty.currentExp.toLocaleString()} EXP</span>
+                </div>
+                {session.penalty.goldLost > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', fontSize: '14px' }}>
+                    <span style={{ color: '#888' }}>골드 손실</span>
+                    <span style={{ color: '#e94560', fontWeight: 700 }}>-{session.penalty.goldLost.toLocaleString()} G</span>
+                  </div>
+                )}
+              </>
+            )}
+            {!session.penalty && (
+              <p style={{ color: '#888', fontSize: '14px', margin: 0, textAlign: 'center' }}>
+                전투에서 패배하였습니다.
+              </p>
+            )}
+          </div>
+          <p
+            style={{
+              position: 'absolute',
+              bottom: 'calc(40px + env(safe-area-inset-bottom))',
+              color: '#555',
+              fontSize: '12px',
+              fontWeight: 500,
+              animation: 'clearPulse 2s ease-in-out infinite',
+              letterSpacing: '1px',
+            }}
+          >
+            화면을 터치하여 나가기
+          </p>
+        </div>
+      )}
 
       {/* ─── Escape Fullscreen ─── */}
       {showEscapeScreen && (
