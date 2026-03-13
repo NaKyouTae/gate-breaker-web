@@ -32,7 +32,8 @@
       "Bash(docker ps:*)",
       "Bash(docker exec:*)",
       "Bash(mkdir -p /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/app/src/app/codex/items/[id])",
-      "Bash(mkdir -p /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/app/src/app/codex/monsters/[id])"
+      "Bash(mkdir -p /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/app/src/app/codex/monsters/[id])",
+      "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/app -type f \\\\\\(-name middleware.ts -o -name *.config.js -o -name *.config.ts \\\\\\))"
     ],
     "additionalDirectories": [
       "/Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/admin/.next",

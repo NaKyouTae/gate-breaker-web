@@ -8,7 +8,7 @@
 
 html,
 body {
-  background-color: #0a0a0f;
+  background-color: #050508;
   color: #eee;
   font-family: 'Noto Sans KR', sans-serif;
   line-height: 1.6;
@@ -19,6 +19,26 @@ body {
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
   user-select: none;
+}
+
+/* Mobile shell - contains the app in a phone-sized frame on desktop */
+.mobile-shell {
+  position: relative;
+  max-width: 430px;
+  height: 100vh;
+  margin: 0 auto;
+  background-color: #0a0a0f;
+  box-shadow: 0 0 60px rgba(124,58,237,0.08), 0 0 40px rgba(0,0,0,0.5);
+  overflow: hidden;
+  /* Creates a containing block so position:fixed children are relative to this */
+  transform: translateZ(0);
+}
+
+.mobile-shell-inner {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 ::selection {

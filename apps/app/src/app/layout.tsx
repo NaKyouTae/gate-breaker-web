@@ -25,20 +25,24 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body>
-        <AuthProvider>
-          <ToastProvider>
-            <Nav />
-            <main
-              style={{
-                paddingTop: '58px',
-                paddingBottom: '72px',
-                minHeight: '100vh',
-              }}
-            >
-              {children}
-            </main>
-          </ToastProvider>
-        </AuthProvider>
+        <div className="mobile-shell">
+          <AuthProvider>
+            <ToastProvider>
+              <Nav />
+              <div className="mobile-shell-inner">
+                <main
+                  style={{
+                    paddingTop: '58px',
+                    paddingBottom: '72px',
+                    minHeight: '100%',
+                  }}
+                >
+                  {children}
+                </main>
+              </div>
+            </ToastProvider>
+          </AuthProvider>
+        </div>
       </body>
     </html>
   );
