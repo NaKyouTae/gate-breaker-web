@@ -1,0 +1,29 @@
+{
+  "name": "gate-breaker-web",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev --filter=@gate-breaker/app --filter=@gate-breaker/admin",
+    "dev:all": "turbo dev --filter=@gate-breaker/app --filter=@gate-breaker/admin",
+    "dev:app": "turbo dev --filter=@gate-breaker/app",
+    "dev:admin": "turbo dev --filter=@gate-breaker/admin",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "prepare": "cd .. && husky gate-breaker-web/.husky"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,mjs}": "eslint --no-fix"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.5",
+    "eslint": "^10.0.3",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.3.3",
+    "turbo": "^2.0.0",
+    "typescript": "^5.4.0"
+  },
+  "packageManager": "pnpm@10.17.0"
+}

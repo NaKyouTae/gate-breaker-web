@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+cd gate-breaker-web
+
+# 변경 파일만 ESLint 검사 (auto-fix 사용 안 함)
+pnpm lint-staged || exit 1

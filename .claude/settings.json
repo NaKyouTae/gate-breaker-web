@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-server/docs -type f -name *.md)",
+      "Bash(grep -rn auth/kakao /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web --include=*.ts --include=*.tsx)",
+      "Bash(docker compose:*)",
+      "Bash(docker build:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx prisma:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm --filter @gate-breaker/app build)",
+      "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web -name *status* -o -name *header* -o -name *hp* -o -name *mp*)",
+      "Bash(git -C /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web rev-parse --show-toplevel)",
+      "Bash(pnpm run:*)",
+      "Bash(chmod +x /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/.husky/pre-commit /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/.husky/pre-push)",
+      "Bash(npx turbo:*)",
+      "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-server -type f -name *.ts -o -name *.js -o -name *.tsx -o -name *.jsx)",
+      "Bash(find /Users/nakyutae/personal/git/gate-breaker -type f -name *battle* -o -name *log* -o -name *dungeon* -o -name *combat*)",
+      "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/src -type f \\\\\\(-name *.ts -o -name *.tsx -o -name *.js -o -name *.jsx \\\\\\))",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ],
+    "additionalDirectories": [
+      "/Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/admin/.next",
+      "/Users/nakyutae/personal/git/gate-breaker/.git"
+    ]
+  }
+}

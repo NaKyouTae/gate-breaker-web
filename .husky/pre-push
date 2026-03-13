@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+cd gate-breaker-web
+
+# TypeScript 타입 체크
+for tsconfig in $(find . -name "tsconfig.json" -not -path "./node_modules/*" -not -path "./.next/*" -not -path "./.turbo/*"); do
+    echo "Type checking: $tsconfig"
+    npx tsc -p "$tsconfig" --noEmit || exit 1
+done
+
+# 전역 ESLint
+pnpm lint || exit 1
