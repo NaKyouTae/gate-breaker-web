@@ -431,24 +431,30 @@ function BattleContent() {
 
   // Auto-attack loop
   useEffect(() => {
-    if (!autoAttack || !session || !!session.result) {
+    const isDungeonVictory = session?.result === 'VICTORY' && !!dungeonProgressRef.current;
+    if (!autoAttack || !session || (!!session.result && !isDungeonVictory)) {
       return;
     }
     const interval = setInterval(() => {
       if (!autoAttackRef.current) return;
       if (actingRef.current || transitioningRef.current) return;
-      if (sessionRef.current?.result) {
+      const currentResult = sessionRef.current?.result;
+      if (currentResult && !(currentResult === 'VICTORY' && !!dungeonProgressRef.current)) {
         setAutoAttack(false);
         return;
       }
-      handleAttack();
+      if (!currentResult) {
+        handleAttack();
+      }
     }, 1500);
     return () => clearInterval(interval);
   }, [autoAttack, session?.result, handleAttack]);
 
-  // Turn off auto-attack on battle end
+  // Turn off auto-attack on battle end (not on dungeon victory)
   useEffect(() => {
-    if (session?.result) setAutoAttack(false);
+    if (session?.result && !(session.result === 'VICTORY' && !!dungeonProgressRef.current)) {
+      setAutoAttack(false);
+    }
   }, [session?.result]);
 
   const handleEscape = useCallback(async () => {
@@ -547,7 +553,7 @@ function BattleContent() {
 
   if (authLoading || loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 'calc(100vh - 56px)' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
         <Spinner size="lg" />
       </div>
     );

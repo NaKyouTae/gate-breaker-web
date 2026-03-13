@@ -29,6 +29,7 @@ export default function RootLayout({
           <AuthProvider>
             <ToastProvider>
               <Nav />
+              <div id="fullscreen-portal" style={{ position: 'relative', zIndex: 200 }} />
               <div className="mobile-shell-inner">
                 <main
                   style={{

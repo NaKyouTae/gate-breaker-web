@@ -132,8 +132,9 @@ function getRequiredExp(level: number): number {
 
 export function TopHud() {
   const { user, isAuthenticated } = useAuth();
+  const pathname = usePathname();
 
-  if (!isAuthenticated || !user) {
+  if (!isAuthenticated || !user || pathname.startsWith('/battle')) {
     return null;
   }
 
@@ -321,7 +322,7 @@ export function BottomNav() {
   const { isAuthenticated } = useAuth();
   const pathname = usePathname();
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || pathname.startsWith('/battle')) {
     return null;
   }
 

@@ -6,6 +6,7 @@ import { inventory, enhance } from '@gate-breaker/api-client';
 import { Badge, Spinner, useToast } from '@gate-breaker/ui';
 import { useAuth } from '@/context/auth-context';
 import { EnhanceEffect, type EnhanceEffectType } from '@/components/enhance-effect';
+import { FullscreenOverlay } from '@/components/fullscreen-overlay';
 import type { InventoryItem, EquipSlot, ItemType, ItemRarity, EnhanceInfo, EnhanceResult } from '@gate-breaker/types';
 
 const RARITY_COLORS: Record<ItemRarity, string> = {
@@ -222,82 +223,284 @@ export default function InventoryPage() {
     const rarityGlow = RARITY_GLOW[enhanceItem.item.rarity];
 
     return (
-      <div style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 9999,
-        background: 'linear-gradient(180deg, #0a0a14 0%, #0e0e1a 30%, #12101f 100%)',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-      }}>
-        {effectType && (
-          <EnhanceEffect type={effectType} onComplete={handleEffectComplete} centerY={effectCenterY} />
-        )}
-
+      <FullscreenOverlay>
         <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          padding: '16px 20px',
-          paddingTop: 'max(16px, env(safe-area-inset-top))',
-          flexShrink: 0,
-          position: 'relative',
-          zIndex: 101,
-        }}>
-          <button
-            onClick={() => !enhancing && setEnhanceItem(null)}
-            style={{
-              background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: 10,
-              padding: '8px 12px',
-              cursor: enhancing ? 'default' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              color: '#aaa',
-              fontSize: 14,
-              opacity: enhancing ? 0.4 : 1,
-              transition: 'all 0.15s',
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-            돌아가기
-          </button>
-        </div>
-
-        <div style={{
-          flex: 1,
-          overflowY: 'auto',
+          position: 'fixed',
+          inset: 0,
+          zIndex: 9999,
+          background: 'linear-gradient(180deg, #0a0a14 0%, #0e0e1a 30%, #12101f 100%)',
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center',
-          position: 'relative',
-          zIndex: 101,
+          overflow: 'hidden',
         }}>
+          {effectType && (
+            <EnhanceEffect type={effectType} onComplete={handleEffectComplete} centerY={effectCenterY} />
+          )}
+
           <div style={{
-            marginTop: 16,
-            marginBottom: 24,
+            display: 'flex',
+            alignItems: 'center',
+            padding: '16px 20px',
+            paddingTop: 'max(16px, env(safe-area-inset-top))',
+            flexShrink: 0,
             position: 'relative',
+            zIndex: 101,
+          }}>
+            <button
+              onClick={() => !enhancing && setEnhanceItem(null)}
+              style={{
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 10,
+                padding: '8px 12px',
+                cursor: enhancing ? 'default' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                color: '#aaa',
+                fontSize: 14,
+                opacity: enhancing ? 0.4 : 1,
+                transition: 'all 0.15s',
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+              돌아가기
+            </button>
+          </div>
+
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
+            position: 'relative',
+            zIndex: 101,
           }}>
-            <div
-              ref={iconRef}
+            <div style={{
+              marginTop: 16,
+              marginBottom: 24,
+              position: 'relative',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+            }}>
+              <div
+                ref={iconRef}
+                style={{
+                  width: 120,
+                  height: 120,
+                  borderRadius: '50%',
+                  background: `radial-gradient(circle, ${rarityGlow} 0%, transparent 70%)`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  position: 'relative',
+                }}
+              >
+                <div style={{
+                  position: 'absolute',
+                  inset: 0,
+                  borderRadius: '50%',
+                  border: `2px solid ${rarityColor}`,
+                  opacity: 0.3,
+                }} />
+                <div style={{
+                  width: 88,
+                  height: 88,
+                  borderRadius: '50%',
+                  background: 'rgba(15, 15, 23, 0.9)',
+                  border: `2px solid ${rarityColor}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: `0 0 30px ${rarityGlow}, inset 0 0 20px rgba(0,0,0,0.5)`,
+                  overflow: 'hidden',
+                }}>
+                  {enhanceItem.item.imageUrl ? (
+                    <img
+                      src={enhanceItem.item.imageUrl}
+                      alt={enhanceItem.item.name}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <span style={{ fontSize: 10, color: '#667085' }}>IMG</span>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ marginTop: 16, textAlign: 'center' }}>
+                <div style={{
+                  color: rarityColor,
+                  fontSize: '1.3rem',
+                  fontWeight: 800,
+                  textShadow: `0 0 20px ${rarityGlow}`,
+                }}>
+                  {enhanceItem.item.name}
+                </div>
+                <div style={{
+                  color: '#eee',
+                  fontSize: '2rem',
+                  fontWeight: 900,
+                  marginTop: 4,
+                  letterSpacing: '2px',
+                }}>
+                  +{enhanceItem.enhanceLevel}
+                </div>
+              </div>
+            </div>
+
+            {!enhanceInfo ? (
+              <div style={{ padding: '40px 0' }}>
+                <Spinner />
+              </div>
+            ) : (
+              <div style={{
+                width: '100%',
+                maxWidth: 400,
+                padding: '0 32px',
+                display: 'flex',
+                flexDirection: 'column',
+              }}>
+                {[
+                  { label: '성공 시', value: `+${enhanceInfo.nextLevel ?? enhanceInfo.currentLevel}`, color: '#2ecc71' },
+                  { label: '실패 시', value: formatFailurePenalty(enhanceInfo.failurePenalty, enhanceInfo.currentLevel), color: '#e94560' },
+                  { label: '성공 확률', value: `${enhanceInfo.successRate}%`, color: '#a78bfa' },
+                  { label: '강화 비용', value: `${enhanceInfo.cost.toLocaleString()} G`, color: '#fbbf24' },
+                ].map((row, idx) => (
+                  <div
+                    key={row.label}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '14px 0',
+                      borderBottom: idx < 3 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                    }}
+                  >
+                    <span style={{ color: '#666', fontSize: 15 }}>{row.label}</span>
+                    <span style={{ color: row.color, fontSize: 17, fontWeight: 800 }}>{row.value}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {enhanceInfo && (
+            <div style={{
+              flexShrink: 0,
+              padding: '16px 24px',
+              paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
+              position: 'relative',
+              zIndex: 101,
+            }}>
+              <button
+                onClick={handleEnhance}
+                disabled={enhancing}
+                style={{
+                  width: '100%',
+                  maxWidth: 400,
+                  margin: '0 auto',
+                  display: 'block',
+                  padding: '18px 0',
+                  borderRadius: 14,
+                  border: 'none',
+                  cursor: enhancing ? 'default' : 'pointer',
+                  fontSize: '1.1rem',
+                  fontWeight: 800,
+                  letterSpacing: '1px',
+                  color: '#fff',
+                  background: enhancing
+                    ? 'rgba(124, 58, 237, 0.3)'
+                    : 'linear-gradient(135deg, #7c3aed 0%, #a78bfa 50%, #7c3aed 100%)',
+                  backgroundSize: '200% 200%',
+                  boxShadow: enhancing
+                    ? 'none'
+                    : '0 4px 20px rgba(124, 58, 237, 0.4), 0 0 40px rgba(167, 139, 250, 0.15)',
+                  transition: 'all 0.2s',
+                  opacity: enhancing ? 0.6 : 1,
+                }}
+              >
+                {enhancing ? '강화 중...' : '강화 시도'}
+              </button>
+            </div>
+          )}
+        </div>
+      </FullscreenOverlay>
+    );
+  }
+
+  // ===== Full-screen Detail View =====
+  if (detailItem) {
+    const rarityColor = RARITY_COLORS[detailItem.item.rarity];
+    const rarityGlow = RARITY_GLOW[detailItem.item.rarity];
+    const isEquipType = ENHANCABLE_TYPES.has(detailItem.item.type);
+
+    return (
+      <FullscreenOverlay>
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 9999,
+          background: 'linear-gradient(180deg, #0a0a14 0%, #0e0e1a 30%, #12101f 100%)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+        }}>
+          {/* Top bar */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            padding: '16px 20px',
+            paddingTop: 'max(16px, env(safe-area-inset-top))',
+            flexShrink: 0,
+          }}>
+            <button
+              onClick={() => setDetailItem(null)}
               style={{
-                width: 120,
-                height: 120,
-                borderRadius: '50%',
-                background: `radial-gradient(circle, ${rarityGlow} 0%, transparent 70%)`,
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 10,
+                padding: '8px 12px',
+                cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                position: 'relative',
+                gap: 6,
+                color: '#aaa',
+                fontSize: 14,
               }}
             >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+              돌아가기
+            </button>
+          </div>
+
+          {/* Scrollable content */}
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            padding: '0 24px',
+          }}>
+            {/* Item Image */}
+            <div style={{
+              marginTop: 16,
+              marginBottom: 20,
+              width: 120,
+              height: 120,
+              borderRadius: '50%',
+              background: `radial-gradient(circle, ${rarityGlow} 0%, transparent 70%)`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+            }}>
               <div style={{
                 position: 'absolute',
                 inset: 0,
@@ -317,10 +520,10 @@ export default function InventoryPage() {
                 boxShadow: `0 0 30px ${rarityGlow}, inset 0 0 20px rgba(0,0,0,0.5)`,
                 overflow: 'hidden',
               }}>
-                {enhanceItem.item.imageUrl ? (
+                {detailItem.item.imageUrl ? (
                   <img
-                    src={enhanceItem.item.imageUrl}
-                    alt={enhanceItem.item.name}
+                    src={detailItem.item.imageUrl}
+                    alt={detailItem.item.name}
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />
                 ) : (
@@ -329,394 +532,196 @@ export default function InventoryPage() {
               </div>
             </div>
 
-            <div style={{ marginTop: 16, textAlign: 'center' }}>
+            {/* Item Name & Type */}
+            <div style={{ textAlign: 'center', marginBottom: 8 }}>
               <div style={{
                 color: rarityColor,
                 fontSize: '1.3rem',
                 fontWeight: 800,
                 textShadow: `0 0 20px ${rarityGlow}`,
               }}>
-                {enhanceItem.item.name}
+                {getItemDisplayName(detailItem)}
               </div>
-              <div style={{
-                color: '#eee',
-                fontSize: '2rem',
-                fontWeight: 900,
-                marginTop: 4,
-                letterSpacing: '2px',
-              }}>
-                +{enhanceItem.enhanceLevel}
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center', marginTop: 6 }}>
+                <span style={{ fontSize: '0.8rem', color: '#666' }}>{TYPE_LABELS[detailItem.item.type]}</span>
+                {detailItem.enhanceLevel > 0 && (
+                  <Badge variant="warning">+{detailItem.enhanceLevel} 강화</Badge>
+                )}
               </div>
             </div>
-          </div>
 
-          {!enhanceInfo ? (
-            <div style={{ padding: '40px 0' }}>
-              <Spinner />
-            </div>
-          ) : (
+            {/* Description */}
+            {detailItem.item.description && (
+              <p style={{ fontSize: '0.85rem', color: '#777', textAlign: 'center', marginBottom: 20, lineHeight: 1.6, maxWidth: 360 }}>
+                {detailItem.item.description}
+              </p>
+            )}
+
+            {/* Stats */}
             <div style={{
               width: '100%',
               maxWidth: 400,
-              padding: '0 32px',
-              display: 'flex',
-              flexDirection: 'column',
+              background: 'rgba(255,255,255,0.03)',
+              borderRadius: 12,
+              padding: '16px 0',
+              marginBottom: 24,
             }}>
               {[
-                { label: '성공 시', value: `+${enhanceInfo.nextLevel ?? enhanceInfo.currentLevel}`, color: '#2ecc71' },
-                { label: '실패 시', value: formatFailurePenalty(enhanceInfo.failurePenalty, enhanceInfo.currentLevel), color: '#e94560' },
-                { label: '성공 확률', value: `${enhanceInfo.successRate}%`, color: '#a78bfa' },
-                { label: '강화 비용', value: `${enhanceInfo.cost.toLocaleString()} G`, color: '#fbbf24' },
-              ].map((row, idx) => (
-                <div
-                  key={row.label}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '14px 0',
-                    borderBottom: idx < 3 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-                  }}
-                >
-                  <span style={{ color: '#666', fontSize: 15 }}>{row.label}</span>
-                  <span style={{ color: row.color, fontSize: 17, fontWeight: 800 }}>{row.value}</span>
+                { label: 'ATK', value: detailItem.item.baseAttack, color: '#e94560' },
+                { label: 'DEF', value: detailItem.item.baseDefense, color: '#4a9eff' },
+                { label: 'HP', value: detailItem.item.baseHp, color: '#2ecc71' },
+              ].filter(s => s.value > 0).length > 0 ? (
+                <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+                  {[
+                    { label: 'ATK', value: detailItem.item.baseAttack, color: '#e94560' },
+                    { label: 'DEF', value: detailItem.item.baseDefense, color: '#4a9eff' },
+                    { label: 'HP', value: detailItem.item.baseHp, color: '#2ecc71' },
+                  ].map((stat) => (
+                    <div key={stat.label} style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.7rem', color: '#555', marginBottom: 4 }}>{stat.label}</div>
+                      <div style={{ fontSize: '1.2rem', fontWeight: 700, color: stat.color }}>{stat.value}</div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              ) : (
+                <div style={{ textAlign: 'center', color: '#444', fontSize: '0.85rem' }}>스탯 없음</div>
+              )}
             </div>
-          )}
-        </div>
 
-        {enhanceInfo && (
+            {/* Quantity */}
+            {detailItem.quantity > 1 && (
+              <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: 16 }}>
+                보유 수량: {detailItem.quantity}개
+              </div>
+            )}
+          </div>
+
+          {/* Bottom Actions */}
           <div style={{
             flexShrink: 0,
             padding: '16px 24px',
             paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
-            position: 'relative',
-            zIndex: 101,
-          }}>
-            <button
-              onClick={handleEnhance}
-              disabled={enhancing}
-              style={{
-                width: '100%',
-                maxWidth: 400,
-                margin: '0 auto',
-                display: 'block',
-                padding: '18px 0',
-                borderRadius: 14,
-                border: 'none',
-                cursor: enhancing ? 'default' : 'pointer',
-                fontSize: '1.1rem',
-                fontWeight: 800,
-                letterSpacing: '1px',
-                color: '#fff',
-                background: enhancing
-                  ? 'rgba(124, 58, 237, 0.3)'
-                  : 'linear-gradient(135deg, #7c3aed 0%, #a78bfa 50%, #7c3aed 100%)',
-                backgroundSize: '200% 200%',
-                boxShadow: enhancing
-                  ? 'none'
-                  : '0 4px 20px rgba(124, 58, 237, 0.4), 0 0 40px rgba(167, 139, 250, 0.15)',
-                transition: 'all 0.2s',
-                opacity: enhancing ? 0.6 : 1,
-              }}
-            >
-              {enhancing ? '강화 중...' : '강화 시도'}
-            </button>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // ===== Full-screen Detail View =====
-  if (detailItem) {
-    const rarityColor = RARITY_COLORS[detailItem.item.rarity];
-    const rarityGlow = RARITY_GLOW[detailItem.item.rarity];
-    const isEquipType = ENHANCABLE_TYPES.has(detailItem.item.type);
-
-    return (
-      <div style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 9999,
-        background: 'linear-gradient(180deg, #0a0a14 0%, #0e0e1a 30%, #12101f 100%)',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-      }}>
-        {/* Top bar */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          padding: '16px 20px',
-          paddingTop: 'max(16px, env(safe-area-inset-top))',
-          flexShrink: 0,
-        }}>
-          <button
-            onClick={() => setDetailItem(null)}
-            style={{
-              background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: 10,
-              padding: '8px 12px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              color: '#aaa',
-              fontSize: 14,
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-            돌아가기
-          </button>
-        </div>
-
-        {/* Scrollable content */}
-        <div style={{
-          flex: 1,
-          overflowY: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          padding: '0 24px',
-        }}>
-          {/* Item Image */}
-          <div style={{
-            marginTop: 16,
-            marginBottom: 20,
-            width: 120,
-            height: 120,
-            borderRadius: '50%',
-            background: `radial-gradient(circle, ${rarityGlow} 0%, transparent 70%)`,
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            position: 'relative',
-          }}>
-            <div style={{
-              position: 'absolute',
-              inset: 0,
-              borderRadius: '50%',
-              border: `2px solid ${rarityColor}`,
-              opacity: 0.3,
-            }} />
-            <div style={{
-              width: 88,
-              height: 88,
-              borderRadius: '50%',
-              background: 'rgba(15, 15, 23, 0.9)',
-              border: `2px solid ${rarityColor}`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: `0 0 30px ${rarityGlow}, inset 0 0 20px rgba(0,0,0,0.5)`,
-              overflow: 'hidden',
-            }}>
-              {detailItem.item.imageUrl ? (
-                <img
-                  src={detailItem.item.imageUrl}
-                  alt={detailItem.item.name}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              ) : (
-                <span style={{ fontSize: 10, color: '#667085' }}>IMG</span>
-              )}
-            </div>
-          </div>
-
-          {/* Item Name & Type */}
-          <div style={{ textAlign: 'center', marginBottom: 8 }}>
-            <div style={{
-              color: rarityColor,
-              fontSize: '1.3rem',
-              fontWeight: 800,
-              textShadow: `0 0 20px ${rarityGlow}`,
-            }}>
-              {getItemDisplayName(detailItem)}
-            </div>
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center', marginTop: 6 }}>
-              <span style={{ fontSize: '0.8rem', color: '#666' }}>{TYPE_LABELS[detailItem.item.type]}</span>
-              {detailItem.enhanceLevel > 0 && (
-                <Badge variant="warning">+{detailItem.enhanceLevel} 강화</Badge>
-              )}
-            </div>
-          </div>
-
-          {/* Description */}
-          {detailItem.item.description && (
-            <p style={{ fontSize: '0.85rem', color: '#777', textAlign: 'center', marginBottom: 20, lineHeight: 1.6, maxWidth: 360 }}>
-              {detailItem.item.description}
-            </p>
-          )}
-
-          {/* Stats */}
-          <div style={{
+            flexDirection: 'column',
+            gap: 10,
+            maxWidth: 440,
+            margin: '0 auto',
             width: '100%',
-            maxWidth: 400,
-            background: 'rgba(255,255,255,0.03)',
-            borderRadius: 12,
-            padding: '16px 0',
-            marginBottom: 24,
           }}>
-            {[
-              { label: 'ATK', value: detailItem.item.baseAttack, color: '#e94560' },
-              { label: 'DEF', value: detailItem.item.baseDefense, color: '#4a9eff' },
-              { label: 'HP', value: detailItem.item.baseHp, color: '#2ecc71' },
-            ].filter(s => s.value > 0).length > 0 ? (
-              <div style={{ display: 'flex', justifyContent: 'space-around' }}>
-                {[
-                  { label: 'ATK', value: detailItem.item.baseAttack, color: '#e94560' },
-                  { label: 'DEF', value: detailItem.item.baseDefense, color: '#4a9eff' },
-                  { label: 'HP', value: detailItem.item.baseHp, color: '#2ecc71' },
-                ].map((stat) => (
-                  <div key={stat.label} style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.7rem', color: '#555', marginBottom: 4 }}>{stat.label}</div>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 700, color: stat.color }}>{stat.value}</div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div style={{ textAlign: 'center', color: '#444', fontSize: '0.85rem' }}>스탯 없음</div>
-            )}
-          </div>
-
-          {/* Quantity */}
-          {detailItem.quantity > 1 && (
-            <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: 16 }}>
-              보유 수량: {detailItem.quantity}개
-            </div>
-          )}
-        </div>
-
-        {/* Bottom Actions */}
-        <div style={{
-          flexShrink: 0,
-          padding: '16px 24px',
-          paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 10,
-          maxWidth: 440,
-          margin: '0 auto',
-          width: '100%',
-        }}>
-          {/* Primary actions row */}
-          <div style={{ display: 'flex', gap: 10 }}>
-            {isEquipType && (
-              detailItem.isEquipped ? (
-                <button
-                  disabled={actionLoading}
-                  onClick={() => handleUnequip(detailItem)}
-                  style={{
-                    flex: 1,
-                    padding: '14px 0',
-                    borderRadius: 12,
-                    border: '1px solid #a78bfa40',
-                    cursor: actionLoading ? 'default' : 'pointer',
-                    fontSize: '0.95rem',
-                    fontWeight: 700,
-                    color: '#a78bfa',
-                    background: 'rgba(167, 139, 250, 0.08)',
-                    opacity: actionLoading ? 0.5 : 1,
-                    transition: 'opacity 0.2s',
-                  }}
-                >
-                  해제
-                </button>
-              ) : (
-                <button
-                  disabled={actionLoading}
-                  onClick={() => handleEquip(detailItem)}
-                  style={{
-                    flex: 1,
-                    padding: '14px 0',
-                    borderRadius: 12,
-                    border: 'none',
-                    cursor: actionLoading ? 'default' : 'pointer',
-                    fontSize: '0.95rem',
-                    fontWeight: 700,
-                    color: '#fff',
-                    background: 'linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)',
-                    boxShadow: '0 4px 16px rgba(124, 58, 237, 0.3)',
-                    opacity: actionLoading ? 0.5 : 1,
-                    transition: 'opacity 0.2s',
-                  }}
-                >
-                  장착
-                </button>
-              )
-            )}
-            {isEquipType && (
-              <button
-                disabled={actionLoading}
-                onClick={() => openEnhance(detailItem)}
-                style={{
-                  flex: 1,
-                  padding: '14px 0',
-                  borderRadius: 12,
-                  border: '1px solid #fbbf2440',
-                  cursor: actionLoading ? 'default' : 'pointer',
-                  fontSize: '0.95rem',
-                  fontWeight: 700,
-                  color: '#fbbf24',
-                  background: 'rgba(251, 191, 36, 0.08)',
-                  opacity: actionLoading ? 0.5 : 1,
-                  transition: 'opacity 0.2s',
-                }}
-              >
-                강화하기
-              </button>
-            )}
-          </div>
-          {/* Secondary actions row - only for non-equipped items */}
-          {!detailItem.isEquipped && (
+            {/* Primary actions row */}
             <div style={{ display: 'flex', gap: 10 }}>
-              <button
-                disabled={actionLoading}
-                onClick={() => handleSell(detailItem)}
-                style={{
-                  flex: 1,
-                  padding: '12px 0',
-                  borderRadius: 12,
-                  border: '1px solid #333',
-                  cursor: actionLoading ? 'default' : 'pointer',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  color: '#999',
-                  background: 'rgba(255,255,255,0.03)',
-                  opacity: actionLoading ? 0.5 : 1,
-                  transition: 'opacity 0.2s',
-                }}
-              >
-                판매 ({detailItem.item.sellPrice}G)
-              </button>
-              <button
-                disabled={actionLoading}
-                onClick={() => handleDiscard(detailItem)}
-                style={{
-                  flex: 1,
-                  padding: '12px 0',
-                  borderRadius: 12,
-                  border: '1px solid #e9456020',
-                  cursor: actionLoading ? 'default' : 'pointer',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  color: '#e94560',
-                  background: 'rgba(233, 69, 96, 0.06)',
-                  opacity: actionLoading ? 0.5 : 1,
-                  transition: 'opacity 0.2s',
-                }}
-              >
-                버리기
-              </button>
+              {isEquipType && (
+                detailItem.isEquipped ? (
+                  <button
+                    disabled={actionLoading}
+                    onClick={() => handleUnequip(detailItem)}
+                    style={{
+                      flex: 1,
+                      padding: '14px 0',
+                      borderRadius: 12,
+                      border: '1px solid #a78bfa40',
+                      cursor: actionLoading ? 'default' : 'pointer',
+                      fontSize: '0.95rem',
+                      fontWeight: 700,
+                      color: '#a78bfa',
+                      background: 'rgba(167, 139, 250, 0.08)',
+                      opacity: actionLoading ? 0.5 : 1,
+                      transition: 'opacity 0.2s',
+                    }}
+                  >
+                    해제
+                  </button>
+                ) : (
+                  <button
+                    disabled={actionLoading}
+                    onClick={() => handleEquip(detailItem)}
+                    style={{
+                      flex: 1,
+                      padding: '14px 0',
+                      borderRadius: 12,
+                      border: 'none',
+                      cursor: actionLoading ? 'default' : 'pointer',
+                      fontSize: '0.95rem',
+                      fontWeight: 700,
+                      color: '#fff',
+                      background: 'linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)',
+                      boxShadow: '0 4px 16px rgba(124, 58, 237, 0.3)',
+                      opacity: actionLoading ? 0.5 : 1,
+                      transition: 'opacity 0.2s',
+                    }}
+                  >
+                    장착
+                  </button>
+                )
+              )}
+              {isEquipType && (
+                <button
+                  disabled={actionLoading}
+                  onClick={() => openEnhance(detailItem)}
+                  style={{
+                    flex: 1,
+                    padding: '14px 0',
+                    borderRadius: 12,
+                    border: '1px solid #fbbf2440',
+                    cursor: actionLoading ? 'default' : 'pointer',
+                    fontSize: '0.95rem',
+                    fontWeight: 700,
+                    color: '#fbbf24',
+                    background: 'rgba(251, 191, 36, 0.08)',
+                    opacity: actionLoading ? 0.5 : 1,
+                    transition: 'opacity 0.2s',
+                  }}
+                >
+                  강화하기
+                </button>
+              )}
             </div>
-          )}
+            {/* Secondary actions row - only for non-equipped items */}
+            {!detailItem.isEquipped && (
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button
+                  disabled={actionLoading}
+                  onClick={() => handleSell(detailItem)}
+                  style={{
+                    flex: 1,
+                    padding: '12px 0',
+                    borderRadius: 12,
+                    border: '1px solid #333',
+                    cursor: actionLoading ? 'default' : 'pointer',
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    color: '#999',
+                    background: 'rgba(255,255,255,0.03)',
+                    opacity: actionLoading ? 0.5 : 1,
+                    transition: 'opacity 0.2s',
+                  }}
+                >
+                  판매 ({detailItem.item.sellPrice}G)
+                </button>
+                <button
+                  disabled={actionLoading}
+                  onClick={() => handleDiscard(detailItem)}
+                  style={{
+                    flex: 1,
+                    padding: '12px 0',
+                    borderRadius: 12,
+                    border: '1px solid #e9456020',
+                    cursor: actionLoading ? 'default' : 'pointer',
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    color: '#e94560',
+                    background: 'rgba(233, 69, 96, 0.06)',
+                    opacity: actionLoading ? 0.5 : 1,
+                    transition: 'opacity 0.2s',
+                  }}
+                >
+                  버리기
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </FullscreenOverlay>
     );
   }
 

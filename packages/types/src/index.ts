@@ -188,7 +188,7 @@ export interface ChatMessage {
   nickname: string;
   message: string;
   timestamp: number | string;
-  type?: 'enhance' | 'dungeon-invite' | 'dungeon-start';
+  type?: 'enhance' | 'dungeon-invite' | 'dungeon-start' | 'join';
   data?: Record<string, unknown>;
 }
 

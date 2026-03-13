@@ -24,7 +24,7 @@ interface SystemMessage {
   nickname: string;
   message: string;
   timestamp: number;
-  type: 'enhance' | 'dungeon-invite' | 'dungeon-start';
+  type: 'enhance' | 'dungeon-invite' | 'dungeon-start' | 'join';
   data: Record<string, unknown>;
 }
 
@@ -453,6 +453,33 @@ export default function ChannelDetailPage() {
             sortedEntries.map((entry, idx) => {
               const timeText = formatChatTime(Number(entry.timestamp));
               if (entry.kind === 'system') {
+                // 입장 메시지는 가운데 정렬
+                if (entry.type === 'join') {
+                  return (
+                    <div
+                      key={`sys-${entry.timestamp}-${idx}`}
+                      style={{
+                        marginBottom: 6,
+                        display: 'flex',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <div
+                        style={{
+                          border: '1px solid #3a3a5a',
+                          borderRadius: 20,
+                          padding: '6px 18px',
+                          fontSize: 12,
+                          color: '#999',
+                          background: 'rgba(42, 42, 74, 0.3)',
+                        }}
+                      >
+                        <span style={{ fontWeight: 600, color: '#b8b8c8' }}>{entry.nickname}</span>님이 입장하였습니다
+                      </div>
+                    </div>
+                  );
+                }
+
                 const mineSystem = entry.userId === user?.id;
                 return (
                   <div
