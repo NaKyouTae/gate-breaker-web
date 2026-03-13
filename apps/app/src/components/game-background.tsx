@@ -281,8 +281,8 @@ export function GameBackground({ children }: GameBackgroundProps) {
       const game = new Phaser.Game({
         type: Phaser.CANVAS,
         parent: container,
-        width: container.clientWidth,
-        height: container.clientHeight,
+        width: Math.max(container.clientWidth, window.innerWidth),
+        height: Math.max(container.clientHeight, window.innerHeight),
         transparent: true,
         scene: GateScene,
         fps: { target: 30, forceSetTimeOut: true },
@@ -291,15 +291,30 @@ export function GameBackground({ children }: GameBackgroundProps) {
         input: { mouse: false, touch: false, keyboard: false },
       });
 
+      const canvas = (game.canvas as HTMLCanvasElement | undefined);
+      if (canvas) {
+        canvas.style.position = 'absolute';
+        canvas.style.inset = '0';
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        canvas.style.zIndex = '0';
+        canvas.style.pointerEvents = 'none';
+        canvas.style.display = 'block';
+      }
+
       gameRef.current = game;
 
       const handleResize = () => {
         if (game && container) {
-          game.scale.resize(container.clientWidth, container.clientHeight);
+          game.scale.resize(
+            Math.max(container.clientWidth, window.innerWidth),
+            Math.max(container.clientHeight, window.innerHeight),
+          );
         }
       };
 
       window.addEventListener('resize', handleResize);
+      requestAnimationFrame(handleResize);
 
       // Store cleanup reference
       (gameRef as React.MutableRefObject<{ game: Phaser.Game; cleanup: () => void } | null>).current = {
@@ -326,18 +341,20 @@ export function GameBackground({ children }: GameBackgroundProps) {
       ref={containerRef}
       style={{
         position: 'relative',
-        width: '100%',
-        minHeight: '100vh',
+        width: '100vw',
+        height: '100dvh',
         overflow: 'hidden',
+        background: '#070711',
       }}
     >
       {/* Phaser canvas renders here via parent ref */}
       <div
         style={{
-          position: 'relative',
+          position: 'absolute',
+          inset: 0,
           zIndex: 10,
           width: '100%',
-          minHeight: '100vh',
+          height: '100%',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',

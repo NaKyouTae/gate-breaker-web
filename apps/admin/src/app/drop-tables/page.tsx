@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { admin } from '@gate-breaker/api-client';
 import type { DropTable, Item, Monster } from '@gate-breaker/types';
-import { Button, Input, Modal, Spinner, useToast } from '@gate-breaker/ui';
+import { Button, Input, Spinner, useToast } from '@gate-breaker/ui';
+import { AdminActionIconButton } from '@/components/admin-action-icon-button';
 import { AdminLayout } from '@/components/admin-layout';
+import { AdminCrudModalForm, AdminFormField } from '@/components/admin-crud-modal-form';
 
 type DropForm = {
   monsterId: string;
@@ -25,6 +27,23 @@ const selectStyle: React.CSSProperties = {
   borderRadius: 6,
   height: 38,
   padding: '0 10px',
+  width: '100%',
+};
+
+const thStyle: React.CSSProperties = {
+  padding: '12px 16px',
+  textAlign: 'left',
+  fontSize: 13,
+  fontWeight: 600,
+  color: '#aaa',
+  borderBottom: '1px solid #333',
+};
+
+const tdStyle: React.CSSProperties = {
+  padding: '12px 16px',
+  fontSize: 14,
+  color: '#eee',
+  borderBottom: '1px solid #333',
 };
 
 export default function DropTablesPage() {
@@ -34,10 +53,11 @@ export default function DropTablesPage() {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
   const [creating, setCreating] = useState<DropForm>(EMPTY_FORM);
   const [hoveredRow, setHoveredRow] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingRate, setEditingRate] = useState(0);
+  const [editing, setEditing] = useState<DropForm>(EMPTY_FORM);
 
   const fetchRows = useCallback(async () => {
     try {
@@ -68,11 +88,27 @@ export default function DropTablesPage() {
     fetchRows();
   }, [fetchRows]);
 
+  const openCreateModal = () => {
+    if (!creating.monsterId && monsters.length > 0) {
+      setCreating((prev) => ({ ...prev, monsterId: monsters[0].id }));
+    }
+    if (!creating.itemId && items.length > 0) {
+      setCreating((prev) => ({ ...prev, itemId: items[0].id }));
+    }
+    setCreateOpen(true);
+  };
+
+  const closeCreateModal = () => {
+    setCreateOpen(false);
+    setCreating((prev) => ({ ...EMPTY_FORM, monsterId: prev.monsterId, itemId: prev.itemId }));
+  };
+
   const createRow = async () => {
     setSaving(true);
     try {
       await admin.dropTables.create(creating);
       addToast('드롭 테이블을 생성했습니다.', 'success');
+      closeCreateModal();
       await fetchRows();
     } catch (err) {
       addToast(err instanceof Error ? err.message : '드롭 테이블 생성에 실패했습니다.', 'error');
@@ -83,20 +119,24 @@ export default function DropTablesPage() {
 
   const openEditModal = (row: DropTable) => {
     setEditingId(row.id);
-    setEditingRate(row.dropRate);
+    setEditing({
+      monsterId: row.monsterId,
+      itemId: row.itemId,
+      dropRate: row.dropRate,
+    });
   };
 
   const closeEditModal = () => {
     setEditingId(null);
-    setEditingRate(0);
+    setEditing(EMPTY_FORM);
   };
 
-  const updateRate = async () => {
+  const updateRow = async () => {
     if (!editingId) return;
     setSaving(true);
     try {
-      await admin.dropTables.update(editingId, { dropRate: editingRate });
-      addToast('드롭 확률을 수정했습니다.', 'success');
+      await admin.dropTables.update(editingId, editing);
+      addToast('드롭 테이블을 수정했습니다.', 'success');
       closeEditModal();
       await fetchRows();
     } catch (err) {
@@ -117,51 +157,52 @@ export default function DropTablesPage() {
     }
   };
 
-  const editingRow = rows.find((row) => row.id === editingId) || null;
+  const renderForm = (
+    form: DropForm,
+    setter: (updater: (prev: DropForm) => DropForm) => void,
+  ) => (
+    <>
+      <AdminFormField label="몬스터">
+        <select
+          value={form.monsterId}
+          onChange={(e) => setter((p) => ({ ...p, monsterId: e.target.value }))}
+          style={selectStyle}
+        >
+          {monsters.map((m) => (
+            <option key={m.id} value={m.id}>{m.name}</option>
+          ))}
+        </select>
+      </AdminFormField>
+      <AdminFormField label="아이템">
+        <select
+          value={form.itemId}
+          onChange={(e) => setter((p) => ({ ...p, itemId: e.target.value }))}
+          style={selectStyle}
+        >
+          {items.map((i) => (
+            <option key={i.id} value={i.id}>{i.name}</option>
+          ))}
+        </select>
+      </AdminFormField>
+      <AdminFormField label="드롭 확률 (0 ~ 1)">
+        <Input
+          type="number"
+          step="0.01"
+          min="0"
+          max="1"
+          value={String(form.dropRate)}
+          onChange={(e) => setter((p) => ({ ...p, dropRate: Number(e.target.value || 0) }))}
+        />
+      </AdminFormField>
+    </>
+  );
 
   return (
     <AdminLayout>
-      <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 20, color: '#eee' }}>드롭 테이블 CRUD</h1>
+      <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 20, color: '#eee' }}>드롭 테이블</h1>
 
-      <div
-        style={{
-          backgroundColor: '#16162a',
-          border: '1px solid #2a2a4a',
-          borderRadius: 8,
-          padding: 20,
-          marginBottom: 24,
-        }}
-      >
-        <h2 style={{ fontSize: 16, fontWeight: 600, color: '#eee', marginBottom: 14 }}>드롭 테이블 생성</h2>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <select
-            value={creating.monsterId}
-            onChange={(e) => setCreating((p) => ({ ...p, monsterId: e.target.value }))}
-            style={selectStyle}
-          >
-            {monsters.map((m) => (
-              <option key={m.id} value={m.id}>{m.name}</option>
-            ))}
-          </select>
-          <select
-            value={creating.itemId}
-            onChange={(e) => setCreating((p) => ({ ...p, itemId: e.target.value }))}
-            style={selectStyle}
-          >
-            {items.map((i) => (
-              <option key={i.id} value={i.id}>{i.name}</option>
-            ))}
-          </select>
-          <Input
-            type="number"
-            step="0.01"
-            min="0"
-            max="1"
-            value={String(creating.dropRate)}
-            onChange={(e) => setCreating((p) => ({ ...p, dropRate: Number(e.target.value || 0) }))}
-          />
-          <Button loading={saving} onClick={createRow}>생성</Button>
-        </div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+        <Button onClick={openCreateModal}>생성</Button>
       </div>
 
       {loading ? (
@@ -178,10 +219,10 @@ export default function DropTablesPage() {
         >
           <thead style={{ backgroundColor: '#16213e' }}>
             <tr>
-              <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 13, fontWeight: 600, color: '#aaa', borderBottom: '1px solid #333' }}>몬스터</th>
-              <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 13, fontWeight: 600, color: '#aaa', borderBottom: '1px solid #333' }}>아이템</th>
-              <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 13, fontWeight: 600, color: '#aaa', borderBottom: '1px solid #333' }}>드롭 확률</th>
-              <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: 13, fontWeight: 600, color: '#aaa', borderBottom: '1px solid #333' }}>액션</th>
+              <th style={thStyle}>몬스터</th>
+              <th style={thStyle}>아이템</th>
+              <th style={thStyle}>드롭 확률</th>
+              <th style={thStyle}>액션</th>
             </tr>
           </thead>
           <tbody>
@@ -189,7 +230,7 @@ export default function DropTablesPage() {
               <tr>
                 <td
                   colSpan={4}
-                  style={{ padding: '12px 16px', fontSize: 14, color: '#666', borderBottom: '1px solid #333', textAlign: 'center' }}
+                  style={{ ...tdStyle, color: '#666', textAlign: 'center' }}
                 >
                   드롭 테이블이 없습니다.
                 </td>
@@ -202,19 +243,19 @@ export default function DropTablesPage() {
                   onMouseLeave={() => setHoveredRow(null)}
                   style={{ backgroundColor: hoveredRow === row.id ? '#252545' : 'transparent' }}
                 >
-                  <td style={{ padding: '12px 16px', fontSize: 14, color: '#eee', borderBottom: '1px solid #333' }}>
+                  <td style={tdStyle}>
                     {row.monster?.name || row.monsterId}
                   </td>
-                  <td style={{ padding: '12px 16px', fontSize: 14, color: '#eee', borderBottom: '1px solid #333' }}>
+                  <td style={tdStyle}>
                     {row.item?.name || row.itemId}
                   </td>
-                  <td style={{ padding: '12px 16px', fontSize: 14, color: '#eee', borderBottom: '1px solid #333' }}>
+                  <td style={tdStyle}>
                     {row.dropRate}
                   </td>
-                  <td style={{ padding: '12px 16px', fontSize: 14, color: '#eee', borderBottom: '1px solid #333' }}>
+                  <td style={tdStyle}>
                     <div style={{ display: 'flex', gap: 8 }}>
-                      <Button size="sm" variant="secondary" onClick={() => openEditModal(row)}>수정</Button>
-                      <Button size="sm" variant="danger" onClick={() => remove(row.id)}>삭제</Button>
+                      <AdminActionIconButton kind="edit" onClick={() => openEditModal(row)} />
+                      <AdminActionIconButton kind="delete" onClick={() => remove(row.id)} />
                     </div>
                   </td>
                 </tr>
@@ -224,27 +265,27 @@ export default function DropTablesPage() {
         </table>
       )}
 
-      <Modal isOpen={!!editingId} onClose={closeEditModal} title="드롭 확률 수정">
-        {editingRow && (
-          <div style={{ display: 'grid', gap: 10 }}>
-            <div style={{ color: '#999', fontSize: 13 }}>
-              {editingRow.monster?.name || editingRow.monsterId} / {editingRow.item?.name || editingRow.itemId}
-            </div>
-            <Input
-              type="number"
-              step="0.01"
-              min="0"
-              max="1"
-              value={String(editingRate)}
-              onChange={(e) => setEditingRate(Number(e.target.value || 0))}
-            />
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-              <Button variant="ghost" onClick={closeEditModal}>취소</Button>
-              <Button loading={saving} onClick={updateRate}>저장</Button>
-            </div>
-          </div>
-        )}
-      </Modal>
+      <AdminCrudModalForm
+        isOpen={createOpen}
+        onClose={closeCreateModal}
+        onSubmit={createRow}
+        title="드롭 테이블 생성"
+        submitLabel="생성"
+        loading={saving}
+      >
+        {renderForm(creating, setCreating)}
+      </AdminCrudModalForm>
+
+      <AdminCrudModalForm
+        isOpen={!!editingId}
+        onClose={closeEditModal}
+        onSubmit={updateRow}
+        title="드롭 테이블 수정"
+        submitLabel="저장"
+        loading={saving}
+      >
+        {renderForm(editing, setEditing)}
+      </AdminCrudModalForm>
     </AdminLayout>
   );
 }

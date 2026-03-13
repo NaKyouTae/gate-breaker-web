@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { channel } from '@gate-breaker/api-client';
 import type { Channel } from '@gate-breaker/types';
-import { Button, Input, Card, Modal, Spinner, Badge, useToast } from '@gate-breaker/ui';
+import { Button, Input, Card, Modal, Spinner, useToast } from '@gate-breaker/ui';
 import { useAuth } from '@/context/auth-context';
 
 export default function ChannelListPage() {
@@ -225,6 +225,10 @@ export default function ChannelListPage() {
               const alreadyIn = isAlreadyMember(ch);
               const canJoin = !full && !inDungeon && !alreadyIn;
               const clickable = isClickable(ch);
+              const hostName =
+                ch.members.find((m) => m.role === 'HOST')?.user?.nickname ||
+                ch.members[0]?.user?.nickname ||
+                '-';
 
               return (
                 <Card
@@ -249,67 +253,45 @@ export default function ChannelListPage() {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      gap: '16px',
+                      gap: '12px',
                     }}
                   >
-                    {/* Left info */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '10px',
-                          marginBottom: '8px',
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontSize: '1.1rem',
-                            fontWeight: 700,
-                            color: '#eee',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                          }}
-                        >
-                          {ch.name}
-                        </span>
-                        {ch.status === 'WAITING' ? (
-                          <Badge variant="success">대기중</Badge>
-                        ) : (
-                          <Badge variant="danger">던전 진행중</Badge>
-                        )}
-                      </div>
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '16px',
-                          fontSize: '0.85rem',
-                          color: '#888',
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: full ? '#e94560' : '#aaa',
-                            fontWeight: 500,
-                          }}
-                        >
-                          {ch.members.length} / {ch.maxMembers}명
-                        </span>
-                        <span style={{ color: '#555' }}>|</span>
-                        <span>
-                          {ch.members
-                            .map((m) => m.user?.nickname || '알 수 없음')
-                            .join(', ')}
-                        </span>
-                        {joining === ch.id && (
-                          <>
-                            <span style={{ color: '#555' }}>|</span>
-                            <span style={{ color: '#a78bfa' }}>입장 중...</span>
-                          </>
-                        )}
-                      </div>
+                    <span
+                      style={{
+                        fontSize: '1.1rem',
+                        fontWeight: 700,
+                        color: '#eee',
+                        flex: 1,
+                        minWidth: 0,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
+                      {ch.name}
+                    </span>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        flexShrink: 0,
+                        fontSize: '0.95rem',
+                        color: '#aaa',
+                        fontWeight: 600,
+                      }}
+                    >
+                      <span style={{ color: full ? '#e94560' : '#aaa' }}>
+                        {ch.members.length} / {ch.maxMembers}명
+                      </span>
+                      <span style={{ color: '#555' }}>|</span>
+                      <span style={{ color: '#9ca3af' }}>{hostName}</span>
+                      {joining === ch.id && (
+                        <>
+                          <span style={{ color: '#555' }}>|</span>
+                          <span style={{ color: '#a78bfa' }}>입장 중...</span>
+                        </>
+                      )}
                     </div>
                   </div>
                 </Card>

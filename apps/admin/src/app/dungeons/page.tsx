@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { admin } from '@gate-breaker/api-client';
 import type { Dungeon } from '@gate-breaker/types';
-import { Button, Input, Modal, Spinner, useToast } from '@gate-breaker/ui';
+import { Button, Input, Spinner, useToast } from '@gate-breaker/ui';
+import { AdminActionIconButton } from '@/components/admin-action-icon-button';
 import { AdminLayout } from '@/components/admin-layout';
+import { AdminCrudModalForm, AdminFormField } from '@/components/admin-crud-modal-form';
 
 type DungeonForm = {
   name: string;
@@ -45,6 +47,7 @@ export default function DungeonsPage() {
   const [rows, setRows] = useState<Dungeon[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
   const [creating, setCreating] = useState<DungeonForm>(EMPTY_FORM);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editing, setEditing] = useState<DungeonForm>(EMPTY_FORM);
@@ -85,12 +88,21 @@ export default function DungeonsPage() {
     setEditing(EMPTY_FORM);
   };
 
+  const openCreateModal = () => {
+    setCreateOpen(true);
+  };
+
+  const closeCreateModal = () => {
+    setCreateOpen(false);
+    setCreating(EMPTY_FORM);
+  };
+
   const saveCreate = async () => {
     setSaving(true);
     try {
       await admin.dungeons.create(creating);
       addToast('던전을 생성했습니다.', 'success');
-      setCreating(EMPTY_FORM);
+      closeCreateModal();
       await fetchRows();
     } catch (err) {
       addToast(err instanceof Error ? err.message : '던전 생성에 실패했습니다.', 'error');
@@ -134,62 +146,40 @@ export default function DungeonsPage() {
     setter((prev) => ({ ...prev, [key]: Number.isFinite(parsed) ? parsed : 0 }));
   };
 
+  const renderForm = (
+    form: DungeonForm,
+    setter: (updater: (prev: DungeonForm) => DungeonForm) => void,
+  ) => (
+    <>
+      <AdminFormField label="이름">
+        <Input value={form.name} onChange={(e) => setter((p) => ({ ...p, name: e.target.value }))} />
+      </AdminFormField>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <AdminFormField label="최소 레벨">
+          <Input type="number" value={String(form.minLevel)} onChange={(e) => changeNumber(setter, 'minLevel', e.target.value)} />
+        </AdminFormField>
+        <AdminFormField label="최대 레벨">
+          <Input type="number" value={String(form.maxLevel)} onChange={(e) => changeNumber(setter, 'maxLevel', e.target.value)} />
+        </AdminFormField>
+        <AdminFormField label="골드 최소">
+          <Input type="number" value={String(form.rewardGoldMin)} onChange={(e) => changeNumber(setter, 'rewardGoldMin', e.target.value)} />
+        </AdminFormField>
+        <AdminFormField label="골드 최대">
+          <Input type="number" value={String(form.rewardGoldMax)} onChange={(e) => changeNumber(setter, 'rewardGoldMax', e.target.value)} />
+        </AdminFormField>
+      </div>
+      <AdminFormField label="경험치">
+        <Input type="number" value={String(form.rewardExp)} onChange={(e) => changeNumber(setter, 'rewardExp', e.target.value)} />
+      </AdminFormField>
+    </>
+  );
+
   return (
     <AdminLayout>
-      <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 20, color: '#eee' }}>던전 CRUD</h1>
+      <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 20, color: '#eee' }}>던전 관리</h1>
 
-      <div
-        style={{
-          backgroundColor: '#16162a',
-          border: '1px solid #2a2a4a',
-          borderRadius: 8,
-          padding: 20,
-          marginBottom: 24,
-        }}
-      >
-        <h2 style={{ fontSize: 16, fontWeight: 600, color: '#ccc', marginTop: 0, marginBottom: 14 }}>
-          던전 생성
-        </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr repeat(5, 1fr)', gap: 8 }}>
-          <Input
-            value={creating.name}
-            placeholder="이름"
-            onChange={(e) => setCreating((p) => ({ ...p, name: e.target.value }))}
-          />
-          <Input
-            type="number"
-            value={String(creating.minLevel)}
-            placeholder="최소레벨"
-            onChange={(e) => changeNumber(setCreating, 'minLevel', e.target.value)}
-          />
-          <Input
-            type="number"
-            value={String(creating.maxLevel)}
-            placeholder="최대레벨"
-            onChange={(e) => changeNumber(setCreating, 'maxLevel', e.target.value)}
-          />
-          <Input
-            type="number"
-            value={String(creating.rewardGoldMin)}
-            placeholder="골드(최소)"
-            onChange={(e) => changeNumber(setCreating, 'rewardGoldMin', e.target.value)}
-          />
-          <Input
-            type="number"
-            value={String(creating.rewardGoldMax)}
-            placeholder="골드(최대)"
-            onChange={(e) => changeNumber(setCreating, 'rewardGoldMax', e.target.value)}
-          />
-          <Input
-            type="number"
-            value={String(creating.rewardExp)}
-            placeholder="경험치"
-            onChange={(e) => changeNumber(setCreating, 'rewardExp', e.target.value)}
-          />
-        </div>
-        <div style={{ marginTop: 12 }}>
-          <Button loading={saving} onClick={saveCreate}>생성</Button>
-        </div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+        <Button onClick={openCreateModal}>생성</Button>
       </div>
 
       {loading ? (
@@ -231,8 +221,8 @@ export default function DungeonsPage() {
                 <td style={tdStyle}>{d.rewardExp}</td>
                 <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
                   <div style={{ display: 'flex', gap: 6 }}>
-                    <Button size="sm" variant="secondary" onClick={() => openEditModal(d)}>수정</Button>
-                    <Button size="sm" variant="danger" onClick={() => remove(d.id)}>삭제</Button>
+                    <AdminActionIconButton kind="edit" onClick={() => openEditModal(d)} />
+                    <AdminActionIconButton kind="delete" onClick={() => remove(d.id)} />
                   </div>
                 </td>
               </tr>
@@ -241,51 +231,27 @@ export default function DungeonsPage() {
         </table>
       )}
 
-      <Modal isOpen={!!editingId} onClose={closeEditModal} title="던전 수정">
-        <div style={{ display: 'grid', gap: 10 }}>
-          <Input
-            value={editing.name}
-            placeholder="이름"
-            onChange={(e) => setEditing((p) => ({ ...p, name: e.target.value }))}
-          />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            <Input
-              type="number"
-              value={String(editing.minLevel)}
-              placeholder="최소레벨"
-              onChange={(e) => changeNumber(setEditing, 'minLevel', e.target.value)}
-            />
-            <Input
-              type="number"
-              value={String(editing.maxLevel)}
-              placeholder="최대레벨"
-              onChange={(e) => changeNumber(setEditing, 'maxLevel', e.target.value)}
-            />
-            <Input
-              type="number"
-              value={String(editing.rewardGoldMin)}
-              placeholder="골드(최소)"
-              onChange={(e) => changeNumber(setEditing, 'rewardGoldMin', e.target.value)}
-            />
-            <Input
-              type="number"
-              value={String(editing.rewardGoldMax)}
-              placeholder="골드(최대)"
-              onChange={(e) => changeNumber(setEditing, 'rewardGoldMax', e.target.value)}
-            />
-            <Input
-              type="number"
-              value={String(editing.rewardExp)}
-              placeholder="경험치"
-              onChange={(e) => changeNumber(setEditing, 'rewardExp', e.target.value)}
-            />
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 6 }}>
-            <Button variant="ghost" onClick={closeEditModal}>취소</Button>
-            <Button loading={saving} onClick={saveEdit}>저장</Button>
-          </div>
-        </div>
-      </Modal>
+      <AdminCrudModalForm
+        isOpen={createOpen}
+        onClose={closeCreateModal}
+        onSubmit={saveCreate}
+        title="던전 생성"
+        submitLabel="생성"
+        loading={saving}
+      >
+        {renderForm(creating, setCreating)}
+      </AdminCrudModalForm>
+
+      <AdminCrudModalForm
+        isOpen={!!editingId}
+        onClose={closeEditModal}
+        onSubmit={saveEdit}
+        title="던전 수정"
+        submitLabel="저장"
+        loading={saving}
+      >
+        {renderForm(editing, setEditing)}
+      </AdminCrudModalForm>
     </AdminLayout>
   );
 }

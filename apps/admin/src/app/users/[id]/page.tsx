@@ -7,6 +7,11 @@ import { Spinner, useToast } from '@gate-breaker/ui';
 import { AdminLayout } from '@/components/admin-layout';
 import type { UserDetail } from '@gate-breaker/types';
 
+const ROLE_LABELS: Record<UserDetail['role'], string> = {
+  USER: '일반 유저',
+  ADMIN: '관리자',
+};
+
 export default function UserDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -49,7 +54,7 @@ export default function UserDetailPage() {
         { label: '공격력', value: user.attack },
         { label: '방어력', value: user.defense },
         { label: '치명타율', value: `${(user.criticalRate * 100).toFixed(1)}%` },
-        { label: '역할', value: user.role },
+        { label: '역할', value: ROLE_LABELS[user.role] },
         { label: '가입일', value: new Date(user.createdAt).toLocaleDateString('ko-KR') },
       ]
     : [];

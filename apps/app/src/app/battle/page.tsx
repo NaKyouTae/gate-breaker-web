@@ -147,12 +147,21 @@ export default function BattlePage() {
   useEffect(() => {
     const dungeonId = searchParams.get('dungeonId');
     const existing = getDungeonProgress();
+    const resumeTotalRaw = Number(searchParams.get('resumeTotal'));
+    const resumeIndexRaw = Number(searchParams.get('resumeIndex'));
+    const hasResumeProgress =
+      Number.isFinite(resumeTotalRaw) &&
+      Number.isFinite(resumeIndexRaw) &&
+      resumeTotalRaw > 0 &&
+      resumeIndexRaw >= 0 &&
+      resumeIndexRaw < resumeTotalRaw;
 
     if (dungeonId && (!existing || existing.dungeonId !== dungeonId)) {
       const minLv = Number(searchParams.get('minLv')) || 1;
       const maxLv = Number(searchParams.get('maxLv')) || minLv;
       const monsterCount = Math.floor(Math.random() * 3) + 3;
-      const total = monsterCount + 1;
+      const total = hasResumeProgress ? resumeTotalRaw : monsterCount + 1;
+      const currentMonsterIndex = hasResumeProgress ? resumeIndexRaw : 0;
       const monsterLevels = Array.from({ length: total }, (_, i) => {
         if (i === total - 1) return maxLv + Math.floor(Math.random() * 2) + 1;
         return minLv + Math.floor(Math.random() * (maxLv - minLv + 1));
@@ -160,15 +169,32 @@ export default function BattlePage() {
       const progress: DungeonProgress = {
         dungeonId,
         totalMonsters: total,
-        currentMonsterIndex: 0,
-        defeatedMonsters: [],
-        isBossNext: false,
+        currentMonsterIndex,
+        defeatedMonsters: Array.from({ length: currentMonsterIndex }, (_, i) => `defeated-${i + 1}`),
+        isBossNext: currentMonsterIndex === total - 2,
         monsterLevels,
       };
       saveDungeonProgress(progress);
       setDungeonProgress(progress);
     } else if (existing) {
-      setDungeonProgress(existing);
+      if (
+        dungeonId &&
+        existing.dungeonId === dungeonId &&
+        hasResumeProgress &&
+        (existing.currentMonsterIndex !== resumeIndexRaw || existing.totalMonsters !== resumeTotalRaw)
+      ) {
+        const synced: DungeonProgress = {
+          ...existing,
+          currentMonsterIndex: resumeIndexRaw,
+          totalMonsters: resumeTotalRaw,
+          defeatedMonsters: Array.from({ length: resumeIndexRaw }, (_, i) => `defeated-${i + 1}`),
+          isBossNext: resumeIndexRaw === resumeTotalRaw - 2,
+        };
+        saveDungeonProgress(synced);
+        setDungeonProgress(synced);
+      } else {
+        setDungeonProgress(existing);
+      }
     }
   }, [searchParams]);
 
@@ -673,7 +699,21 @@ export default function BattlePage() {
                 ...(monsterAttacking ? { animation: 'monsterLunge 0.5s ease' } : {}),
               }}
             >
-              {isBossMonster ? '👹' : '👾'}
+              {session.monster.imageUrl ? (
+                <img
+                  src={session.monster.imageUrl}
+                  alt={session.monster.name}
+                  style={{
+                    width: isBossMonster ? '66px' : '58px',
+                    height: isBossMonster ? '66px' : '58px',
+                    objectFit: 'cover',
+                    borderRadius: '50%',
+                    border: isBossMonster ? '2px solid rgba(233,69,96,0.6)' : '2px solid rgba(124,58,237,0.45)',
+                  }}
+                />
+              ) : (
+                isBossMonster ? '👹' : '👾'
+              )}
             </div>
             {damageNumber !== null && (
               <div

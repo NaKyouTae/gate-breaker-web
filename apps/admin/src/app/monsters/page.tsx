@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { admin } from '@gate-breaker/api-client';
 import type { Dungeon, Monster } from '@gate-breaker/types';
-import { Button, Input, Modal, Spinner, useToast } from '@gate-breaker/ui';
+import { Button, Input, Spinner, useToast } from '@gate-breaker/ui';
+import { AdminActionIconButton } from '@/components/admin-action-icon-button';
 import { AdminLayout } from '@/components/admin-layout';
+import { AdminCrudModalForm, AdminFormField } from '@/components/admin-crud-modal-form';
 
 type MonsterForm = {
   name: string;
@@ -58,6 +60,7 @@ export default function MonstersPage() {
   const [dungeons, setDungeons] = useState<Dungeon[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
   const [creating, setCreating] = useState<MonsterForm>(EMPTY_FORM);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editing, setEditing] = useState<MonsterForm>(EMPTY_FORM);
@@ -104,12 +107,24 @@ export default function MonstersPage() {
     setter((prev) => ({ ...prev, [key]: Number.isFinite(parsed) ? parsed : 0 }));
   };
 
+  const openCreateModal = () => {
+    if (!creating.dungeonId && dungeons.length > 0) {
+      setCreating((prev) => ({ ...prev, dungeonId: dungeons[0].id }));
+    }
+    setCreateOpen(true);
+  };
+
+  const closeCreateModal = () => {
+    setCreateOpen(false);
+    setCreating((prev) => ({ ...EMPTY_FORM, dungeonId: prev.dungeonId }));
+  };
+
   const saveCreate = async () => {
     setSaving(true);
     try {
       await admin.monsters.create(creating);
       addToast('몬스터를 생성했습니다.', 'success');
-      setCreating((prev) => ({ ...EMPTY_FORM, dungeonId: prev.dungeonId }));
+      closeCreateModal();
       await fetchRows();
     } catch (err) {
       addToast(err instanceof Error ? err.message : '몬스터 생성에 실패했습니다.', 'error');
@@ -186,32 +201,51 @@ export default function MonstersPage() {
     return d ? d.name : dungeonId;
   };
 
+  const renderForm = (
+    form: MonsterForm,
+    setter: (updater: (prev: MonsterForm) => MonsterForm) => void,
+  ) => (
+    <>
+      <AdminFormField label="이름">
+        <Input value={form.name} onChange={(e) => setter((p) => ({ ...p, name: e.target.value }))} />
+      </AdminFormField>
+      <AdminFormField label="던전">
+        <select
+          value={form.dungeonId}
+          onChange={(e) => setter((p) => ({ ...p, dungeonId: e.target.value }))}
+          style={selectStyle}
+        >
+          {dungeons.map((d) => (
+            <option key={d.id} value={d.id}>{d.name}</option>
+          ))}
+        </select>
+      </AdminFormField>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <AdminFormField label="HP">
+          <Input type="number" value={String(form.hp)} onChange={(e) => changeNum(setter, 'hp', e.target.value)} />
+        </AdminFormField>
+        <AdminFormField label="공격">
+          <Input type="number" value={String(form.attack)} onChange={(e) => changeNum(setter, 'attack', e.target.value)} />
+        </AdminFormField>
+        <AdminFormField label="방어">
+          <Input type="number" value={String(form.defense)} onChange={(e) => changeNum(setter, 'defense', e.target.value)} />
+        </AdminFormField>
+        <AdminFormField label="경험치">
+          <Input type="number" value={String(form.expReward)} onChange={(e) => changeNum(setter, 'expReward', e.target.value)} />
+        </AdminFormField>
+      </div>
+      <AdminFormField label="골드">
+        <Input type="number" value={String(form.goldReward)} onChange={(e) => changeNum(setter, 'goldReward', e.target.value)} />
+      </AdminFormField>
+    </>
+  );
+
   return (
     <AdminLayout>
-      <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 20, color: '#eee' }}>몬스터 CRUD</h1>
+      <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 20, color: '#eee' }}>몬스터 관리</h1>
 
-      <div style={{ backgroundColor: '#16162a', border: '1px solid #2a2a4a', borderRadius: 8, padding: 20, marginBottom: 24 }}>
-        <h2 style={{ fontSize: 16, fontWeight: 600, color: '#eee', marginBottom: 12 }}>몬스터 생성</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr repeat(5, 1fr)', gap: 8, alignItems: 'center' }}>
-          <Input value={creating.name} placeholder="이름" onChange={(e) => setCreating((p) => ({ ...p, name: e.target.value }))} />
-          <select
-            value={creating.dungeonId}
-            onChange={(e) => setCreating((p) => ({ ...p, dungeonId: e.target.value }))}
-            style={{ ...selectStyle, width: 'auto' }}
-          >
-            {dungeons.map((d) => (
-              <option key={d.id} value={d.id}>{d.name}</option>
-            ))}
-          </select>
-          <Input type="number" value={String(creating.hp)} placeholder="HP" onChange={(e) => changeNum(setCreating, 'hp', e.target.value)} />
-          <Input type="number" value={String(creating.attack)} placeholder="공격" onChange={(e) => changeNum(setCreating, 'attack', e.target.value)} />
-          <Input type="number" value={String(creating.defense)} placeholder="방어" onChange={(e) => changeNum(setCreating, 'defense', e.target.value)} />
-          <Input type="number" value={String(creating.expReward)} placeholder="경험치" onChange={(e) => changeNum(setCreating, 'expReward', e.target.value)} />
-          <Input type="number" value={String(creating.goldReward)} placeholder="골드" onChange={(e) => changeNum(setCreating, 'goldReward', e.target.value)} />
-        </div>
-        <div style={{ marginTop: 10 }}>
-          <Button loading={saving} onClick={saveCreate}>생성</Button>
-        </div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+        <Button onClick={openCreateModal}>생성</Button>
       </div>
 
       {loading ? (
@@ -333,8 +367,8 @@ export default function MonstersPage() {
                   <td style={tdStyle}>{m.goldReward}</td>
                   <td style={tdStyle}>
                     <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                      <Button size="sm" variant="secondary" onClick={() => openEditModal(m)}>수정</Button>
-                      <Button size="sm" variant="danger" onClick={() => remove(m.id)}>삭제</Button>
+                      <AdminActionIconButton kind="edit" onClick={() => openEditModal(m)} />
+                      <AdminActionIconButton kind="delete" onClick={() => remove(m.id)} />
                     </div>
                   </td>
                 </tr>
@@ -344,31 +378,27 @@ export default function MonstersPage() {
         </table>
       )}
 
-      <Modal isOpen={!!editingId} onClose={closeEditModal} title="몬스터 수정">
-        <div style={{ display: 'grid', gap: 10 }}>
-          <Input value={editing.name} placeholder="이름" onChange={(e) => setEditing((p) => ({ ...p, name: e.target.value }))} />
-          <select
-            value={editing.dungeonId}
-            onChange={(e) => setEditing((p) => ({ ...p, dungeonId: e.target.value }))}
-            style={selectStyle}
-          >
-            {dungeons.map((d) => (
-              <option key={d.id} value={d.id}>{d.name}</option>
-            ))}
-          </select>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            <Input type="number" value={String(editing.hp)} placeholder="HP" onChange={(e) => changeNum(setEditing, 'hp', e.target.value)} />
-            <Input type="number" value={String(editing.attack)} placeholder="공격" onChange={(e) => changeNum(setEditing, 'attack', e.target.value)} />
-            <Input type="number" value={String(editing.defense)} placeholder="방어" onChange={(e) => changeNum(setEditing, 'defense', e.target.value)} />
-            <Input type="number" value={String(editing.expReward)} placeholder="경험치" onChange={(e) => changeNum(setEditing, 'expReward', e.target.value)} />
-            <Input type="number" value={String(editing.goldReward)} placeholder="골드" onChange={(e) => changeNum(setEditing, 'goldReward', e.target.value)} />
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 6 }}>
-            <Button variant="ghost" onClick={closeEditModal}>취소</Button>
-            <Button loading={saving} onClick={saveEdit}>저장</Button>
-          </div>
-        </div>
-      </Modal>
+      <AdminCrudModalForm
+        isOpen={createOpen}
+        onClose={closeCreateModal}
+        onSubmit={saveCreate}
+        title="몬스터 생성"
+        submitLabel="생성"
+        loading={saving}
+      >
+        {renderForm(creating, setCreating)}
+      </AdminCrudModalForm>
+
+      <AdminCrudModalForm
+        isOpen={!!editingId}
+        onClose={closeEditModal}
+        onSubmit={saveEdit}
+        title="몬스터 수정"
+        submitLabel="저장"
+        loading={saving}
+      >
+        {renderForm(editing, setEditing)}
+      </AdminCrudModalForm>
     </AdminLayout>
   );
 }

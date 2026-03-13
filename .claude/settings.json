@@ -24,7 +24,15 @@
       "Bash(git push:*)",
       "Bash(git fetch:*)",
       "Bash(git rebase:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/app/src -type f \\\\\\(-name *nav* -o -name *bottom* -o -name *layout* -o -name *authenticated* \\\\\\))",
+      "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/packages -name \"package.json\" -exec cat {})",
+      "Bash(PGPASSWORD='Skrbxo123!@#' psql -h localhost -U postgres -d gate-breaker -c \"SELECT id, name, \"\"imageUrl\"\" FROM monster WHERE \"\"imageUrl\"\" IS NOT NULL;\")",
+      "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-server/src -type f -name *.ts)",
+      "Bash(docker ps:*)",
+      "Bash(docker exec:*)",
+      "Bash(mkdir -p /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/app/src/app/codex/items/[id])",
+      "Bash(mkdir -p /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/app/src/app/codex/monsters/[id])"
     ],
     "additionalDirectories": [
       "/Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/admin/.next",

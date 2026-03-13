@@ -230,7 +230,11 @@ export default function ChannelDetailPage() {
       new Map(
         (channelInfo?.members ?? []).map((m) => [
           m.userId,
-          { nickname: m.user?.nickname ?? m.userId.slice(0, 8), level: m.user?.level ?? null },
+          {
+            nickname: m.user?.nickname ?? m.userId.slice(0, 8),
+            level: m.user?.level ?? null,
+            profileImageUrl: m.user?.profileImageUrl ?? null,
+          },
         ]),
       ),
     [channelInfo?.members],
@@ -524,9 +528,18 @@ export default function ChannelDetailPage() {
                               fontSize: 12,
                               fontWeight: 700,
                               color: '#ddd',
+                              overflow: 'hidden',
                             }}
                           >
-                            {(sender?.nickname ?? entry.nickname).slice(0, 1)}
+                            {sender?.profileImageUrl ? (
+                              <img
+                                src={sender.profileImageUrl}
+                                alt={sender.nickname}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              />
+                            ) : (
+                              (sender?.nickname ?? entry.nickname).slice(0, 1)
+                            )}
                           </div>
                         ) : null}
                       </div>

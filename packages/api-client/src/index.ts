@@ -20,6 +20,10 @@ import type {
   DropTable,
   BattleLog,
   UserDetail,
+  CodexItem,
+  CodexItemDetail,
+  CodexMonster,
+  CodexMonsterDetail,
 } from '@gate-breaker/types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
@@ -129,6 +133,10 @@ export const user = {
   updateMe: (dto: { nickname?: string }) =>
     request<User>('/user/me', { method: 'PATCH', body: JSON.stringify(dto) }),
   stats: () => request<UserStats>('/user/me/stats'),
+  uploadProfileImage: (file: File) =>
+    uploadFile<User>('/user/me/profile-image', file),
+  deleteProfileImage: () =>
+    request<User>('/user/me/profile-image', { method: 'DELETE' }),
 };
 
 // ===== Inventory =====
@@ -215,6 +223,14 @@ export const channel = {
   leave: (id: string) =>
     request<{ message: string }>(`/channel/${id}/leave`, { method: 'POST' }),
   chat: (id: string) => request<ChatMessage[]>(`/channel/${id}/chat`),
+};
+
+// ===== Codex =====
+export const codex = {
+  items: () => request<CodexItem[]>('/codex/items'),
+  itemDetail: (id: string) => request<CodexItemDetail>(`/codex/items/${id}`),
+  monsters: () => request<CodexMonster[]>('/codex/monsters'),
+  monsterDetail: (id: string) => request<CodexMonsterDetail>(`/codex/monsters/${id}`),
 };
 
 async function uploadFile<T>(
@@ -343,4 +359,4 @@ export const admin = {
 };
 
 export { ApiError };
-export type { AuthResponse, User, UserStats, InventoryItem, Dungeon, BattleSession, BattleLogEntry, EnhanceInfo, EnhanceResult, ShopItem, Channel, ChatMessage, DashboardStats, PaginatedResponse, Monster, Item, DropTable, BattleLog, UserDetail };
+export type { AuthResponse, User, UserStats, InventoryItem, Dungeon, BattleSession, BattleLogEntry, EnhanceInfo, EnhanceResult, ShopItem, Channel, ChatMessage, DashboardStats, PaginatedResponse, Monster, Item, DropTable, BattleLog, UserDetail, CodexItem, CodexItemDetail, CodexMonster, CodexMonsterDetail };

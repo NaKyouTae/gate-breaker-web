@@ -23,6 +23,7 @@ export interface User {
   attack: number;
   defense: number;
   criticalRate: number;
+  profileImageUrl?: string | null;
   role: Role;
   kakaoId?: string;
   createdAt: string;
@@ -123,7 +124,7 @@ export interface BattleSession {
   id: string;
   userId: string;
   dungeonId: string;
-  monster: { name: string; hp: number; attack: number; defense: number };
+  monster: { name: string; imageUrl?: string | null; hp: number; attack: number; defense: number };
   playerHp: number;
   playerMaxHp: number;
   playerMp: number;
@@ -176,7 +177,7 @@ export interface ChannelMember {
   id: string;
   channelId: string;
   userId: string;
-  user?: Pick<User, 'id' | 'nickname' | 'level'>;
+  user?: Pick<User, 'id' | 'nickname' | 'level' | 'profileImageUrl'>;
   role: ChannelMemberRole;
   joinedAt: string;
 }
@@ -218,6 +219,48 @@ export interface GameConfig {
   key: string;
   value: unknown;
   description?: string;
+}
+
+// ===== Codex =====
+export interface CodexItem {
+  id: string;
+  name: string;
+  type: ItemType;
+  rarity: ItemRarity;
+  imageUrl?: string | null;
+  discovered: boolean;
+}
+
+export interface CodexItemDetail extends Item {
+  discovered: boolean;
+  dropSources: {
+    monsterId: string;
+    monsterName: string;
+    dungeonName: string;
+    dropRate: number;
+  }[];
+  shopAvailable: boolean;
+}
+
+export interface CodexMonster {
+  id: string;
+  name: string;
+  imageUrl?: string | null;
+  dungeonName: string;
+  encountered: boolean;
+}
+
+export interface CodexMonsterDetail extends Monster {
+  encountered: boolean;
+  dungeon: { id: string; name: string; minLevel: number; maxLevel: number };
+  description?: string;
+  drops: {
+    itemId: string;
+    itemName: string;
+    itemRarity: ItemRarity;
+    itemImageUrl?: string | null;
+    dropRate: number;
+  }[];
 }
 
 // ===== Admin =====

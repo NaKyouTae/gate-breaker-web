@@ -8,6 +8,10 @@ import { AdminLayout } from '@/components/admin-layout';
 import type { User, PaginatedResponse } from '@gate-breaker/types';
 
 const LIMIT = 20;
+const ROLE_LABELS: Record<User['role'], string> = {
+  USER: '일반 유저',
+  ADMIN: '관리자',
+};
 
 export default function UsersPage() {
   const router = useRouter();
@@ -164,7 +168,7 @@ export default function UsersPage() {
                           color: user.role === 'ADMIN' ? '#6c5ce7' : '#aaa',
                         }}
                       >
-                        {user.role}
+                        {ROLE_LABELS[user.role]}
                       </span>
                     </td>
                     <td style={{ ...tableCellStyle, color: '#aaa', fontSize: 13 }}>

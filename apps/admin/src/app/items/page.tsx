@@ -1,10 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { admin } from '@gate-breaker/api-client';
 import type { Item, ItemRarity, ItemType } from '@gate-breaker/types';
-import { Button, Input, Modal, Spinner, useToast } from '@gate-breaker/ui';
+import { Button, Input, Spinner, useToast } from '@gate-breaker/ui';
+import { AdminActionIconButton } from '@/components/admin-action-icon-button';
 import { AdminLayout } from '@/components/admin-layout';
+import { AdminCrudModalForm, AdminFormField } from '@/components/admin-crud-modal-form';
 
 type ItemForm = {
   name: string;
@@ -21,6 +23,23 @@ type ItemForm = {
 
 const TYPES: ItemType[] = ['WEAPON', 'ARMOR', 'GLOVE', 'SHOE', 'RING', 'NECKLACE', 'MATERIAL', 'CONSUMABLE'];
 const RARITIES: ItemRarity[] = ['COMMON', 'RARE', 'EPIC', 'LEGENDARY', 'MYTHIC'];
+const TYPE_LABELS: Record<ItemType, string> = {
+  WEAPON: '무기',
+  ARMOR: '방어구',
+  GLOVE: '장갑',
+  SHOE: '신발',
+  RING: '반지',
+  NECKLACE: '목걸이',
+  MATERIAL: '재료',
+  CONSUMABLE: '소모품',
+};
+const RARITY_LABELS: Record<ItemRarity, string> = {
+  COMMON: '일반',
+  RARE: '희귀',
+  EPIC: '영웅',
+  LEGENDARY: '전설',
+  MYTHIC: '신화',
+};
 
 const EMPTY_FORM: ItemForm = {
   name: '',
@@ -73,10 +92,13 @@ export default function ItemsPage() {
   const [rows, setRows] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
   const [creating, setCreating] = useState<ItemForm>(EMPTY_FORM);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editing, setEditing] = useState<ItemForm>(EMPTY_FORM);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const [searchText, setSearchText] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('전체');
 
   const fetchRows = useCallback(async () => {
     try {
@@ -117,6 +139,15 @@ export default function ItemsPage() {
     setEditing(EMPTY_FORM);
   };
 
+  const openCreateModal = () => {
+    setCreateOpen(true);
+  };
+
+  const closeCreateModal = () => {
+    setCreateOpen(false);
+    setCreating(EMPTY_FORM);
+  };
+
   const changeNum = (
     setter: (updater: (prev: ItemForm) => ItemForm) => void,
     key: keyof ItemForm,
@@ -131,7 +162,7 @@ export default function ItemsPage() {
     try {
       await admin.items.create(creating);
       addToast('아이템을 생성했습니다.', 'success');
-      setCreating(EMPTY_FORM);
+      closeCreateModal();
       await fetchRows();
     } catch (err) {
       addToast(err instanceof Error ? err.message : '아이템 생성에 실패했습니다.', 'error');
@@ -193,157 +224,245 @@ export default function ItemsPage() {
     }
   };
 
+  const getCategoryLabel = useCallback(
+    (item: Item) => {
+      const fromItem = item.category?.trim();
+      if (fromItem) return fromItem;
+      return TYPE_LABELS[item.type];
+    },
+    [],
+  );
+
+  const categories = useMemo(() => {
+    const values = Array.from(new Set(rows.map((row) => getCategoryLabel(row))));
+    return ['전체', ...values];
+  }, [getCategoryLabel, rows]);
+
+  const filteredRows = useMemo(() => {
+    const q = searchText.trim().toLowerCase();
+    return rows.filter((row) => {
+      const matchedCategory =
+        selectedCategory === '전체' || getCategoryLabel(row) === selectedCategory;
+      const matchedName =
+        q.length === 0 || row.name.toLowerCase().includes(q);
+      return matchedCategory && matchedName;
+    });
+  }, [getCategoryLabel, rows, searchText, selectedCategory]);
+
+  const renderForm = (
+    form: ItemForm,
+    setter: (updater: (prev: ItemForm) => ItemForm) => void,
+  ) => (
+    <>
+      <AdminFormField label="이름">
+        <Input value={form.name} onChange={(e) => setter((p) => ({ ...p, name: e.target.value }))} />
+      </AdminFormField>
+      <AdminFormField label="카테고리">
+        <Input value={form.category} onChange={(e) => setter((p) => ({ ...p, category: e.target.value }))} />
+      </AdminFormField>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <AdminFormField label="타입">
+          <select value={form.type} onChange={(e) => setter((p) => ({ ...p, type: e.target.value as ItemType }))} style={selectStyle}>
+            {TYPES.map((t) => <option key={t} value={t}>{TYPE_LABELS[t]}</option>)}
+          </select>
+        </AdminFormField>
+        <AdminFormField label="등급">
+          <select value={form.rarity} onChange={(e) => setter((p) => ({ ...p, rarity: e.target.value as ItemRarity }))} style={selectStyle}>
+            {RARITIES.map((r) => <option key={r} value={r}>{RARITY_LABELS[r]}</option>)}
+          </select>
+        </AdminFormField>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <AdminFormField label="공격력">
+          <Input type="number" value={String(form.baseAttack)} onChange={(e) => changeNum(setter, 'baseAttack', e.target.value)} />
+        </AdminFormField>
+        <AdminFormField label="방어력">
+          <Input type="number" value={String(form.baseDefense)} onChange={(e) => changeNum(setter, 'baseDefense', e.target.value)} />
+        </AdminFormField>
+        <AdminFormField label="HP">
+          <Input type="number" value={String(form.baseHp)} onChange={(e) => changeNum(setter, 'baseHp', e.target.value)} />
+        </AdminFormField>
+        <AdminFormField label="판매가">
+          <Input type="number" value={String(form.sellPrice)} onChange={(e) => changeNum(setter, 'sellPrice', e.target.value)} />
+        </AdminFormField>
+      </div>
+      <AdminFormField label="구매가">
+        <Input type="number" value={String(form.buyPrice)} onChange={(e) => changeNum(setter, 'buyPrice', e.target.value)} />
+      </AdminFormField>
+      <AdminFormField label="설명">
+        <Input value={form.description} onChange={(e) => setter((p) => ({ ...p, description: e.target.value }))} />
+      </AdminFormField>
+    </>
+  );
+
   return (
     <AdminLayout>
-      <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 20, color: '#eee' }}>아이템 CRUD</h1>
-
-      <div style={{ backgroundColor: '#16162a', border: '1px solid #2a2a4a', borderRadius: 8, padding: 20, marginBottom: 24 }}>
-        <h2 style={{ fontSize: 16, fontWeight: 600, color: '#eee', marginBottom: 12 }}>아이템 생성</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 1fr repeat(5, 1fr)', gap: 8 }}>
-          <Input value={creating.name} placeholder="이름" onChange={(e) => setCreating((p) => ({ ...p, name: e.target.value }))} />
-          <Input value={creating.category} placeholder="카테고리" onChange={(e) => setCreating((p) => ({ ...p, category: e.target.value }))} />
-          <select value={creating.type} onChange={(e) => setCreating((p) => ({ ...p, type: e.target.value as ItemType }))} style={selectStyle}>
-            {TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-          </select>
-          <select value={creating.rarity} onChange={(e) => setCreating((p) => ({ ...p, rarity: e.target.value as ItemRarity }))} style={selectStyle}>
-            {RARITIES.map((r) => <option key={r} value={r}>{r}</option>)}
-          </select>
-          <Input type="number" value={String(creating.baseAttack)} onChange={(e) => changeNum(setCreating, 'baseAttack', e.target.value)} />
-          <Input type="number" value={String(creating.baseDefense)} onChange={(e) => changeNum(setCreating, 'baseDefense', e.target.value)} />
-          <Input type="number" value={String(creating.baseHp)} onChange={(e) => changeNum(setCreating, 'baseHp', e.target.value)} />
-          <Input type="number" value={String(creating.sellPrice)} onChange={(e) => changeNum(setCreating, 'sellPrice', e.target.value)} />
-          <Input type="number" value={String(creating.buyPrice)} onChange={(e) => changeNum(setCreating, 'buyPrice', e.target.value)} />
-        </div>
-        <div style={{ marginTop: 8 }}>
-          <Input value={creating.description} placeholder="설명" onChange={(e) => setCreating((p) => ({ ...p, description: e.target.value }))} />
-        </div>
-        <div style={{ marginTop: 10 }}><Button loading={saving} onClick={saveCreate}>생성</Button></div>
-      </div>
+      <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 20, color: '#eee' }}>아이템 관리</h1>
 
       {loading ? (
         <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}><Spinner /></div>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: '#1a1a2e', borderRadius: 8, overflow: 'hidden' }}>
-          <thead style={{ backgroundColor: '#16213e' }}>
-            <tr>
-              <th style={thStyle}>이미지</th>
-              <th style={thStyle}>이름</th>
-              <th style={thStyle}>카테고리</th>
-              <th style={thStyle}>타입</th>
-              <th style={thStyle}>등급</th>
-              <th style={thStyle}>공격</th>
-              <th style={thStyle}>방어</th>
-              <th style={thStyle}>HP</th>
-              <th style={thStyle}>판매가</th>
-              <th style={thStyle}>구매가</th>
-              <th style={thStyle}>액션</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => {
-              const isUploading = uploadingId === row.id;
-
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
+            {categories.map((category) => {
+              const active = selectedCategory === category;
               return (
-                <tr
-                  key={row.id}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLTableRowElement).style.backgroundColor = '#252545'; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLTableRowElement).style.backgroundColor = 'transparent'; }}
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  style={{
+                    border: active ? '1px solid #6c5ce7' : '1px solid #333',
+                    backgroundColor: active ? '#6c5ce730' : '#16162a',
+                    color: active ? '#d1c4ff' : '#aaa',
+                    borderRadius: 999,
+                    padding: '6px 12px',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
                 >
-                  <td style={tdStyle}>
-                    {isUploading ? (
-                      <Spinner />
-                    ) : row.imageUrl ? (
-                      <div style={{ position: 'relative', display: 'inline-block', width: 40, height: 40 }}>
-                        <img
-                          src={row.imageUrl}
-                          alt={row.name}
-                          style={{ width: 40, height: 40, borderRadius: 6, objectFit: 'cover' }}
-                        />
-                        <button
-                          onClick={() => handleImageDelete(row.id)}
-                          style={{
-                            position: 'absolute',
-                            top: -6,
-                            right: -6,
-                            width: 18,
-                            height: 18,
-                            borderRadius: '50%',
-                            backgroundColor: '#e74c3c',
-                            color: '#fff',
-                            border: 'none',
-                            fontSize: 11,
-                            lineHeight: '18px',
-                            textAlign: 'center',
-                            cursor: 'pointer',
-                            padding: 0,
-                          }}
-                        >
-                          X
-                        </button>
-                      </div>
-                    ) : (
-                      <label style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: 6, backgroundColor: '#252545', border: '1px dashed #555', cursor: 'pointer', fontSize: 18, color: '#666' }}>
-                        +
-                        <input
-                          type="file"
-                          accept="image/*"
-                          style={{ display: 'none' }}
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) handleImageUpload(row.id, file);
-                          }}
-                        />
-                      </label>
-                    )}
-                  </td>
-                  <td style={tdStyle}>{row.name}</td>
-                  <td style={tdStyle}>{row.category}</td>
-                  <td style={tdStyle}>{row.type}</td>
-                  <td style={tdStyle}>
-                    <span style={{ color: RARITY_COLORS[row.rarity], fontWeight: 600 }}>{row.rarity}</span>
-                  </td>
-                  <td style={tdStyle}>{row.baseAttack}</td>
-                  <td style={tdStyle}>{row.baseDefense}</td>
-                  <td style={tdStyle}>{row.baseHp}</td>
-                  <td style={tdStyle}>{row.sellPrice}</td>
-                  <td style={tdStyle}>{row.buyPrice}</td>
-                  <td style={tdStyle}>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <Button size="sm" variant="secondary" onClick={() => openEditModal(row)}>수정</Button>
-                      <Button size="sm" variant="danger" onClick={() => remove(row.id)}>삭제</Button>
-                    </div>
-                  </td>
-                </tr>
+                  {category}
+                </button>
               );
             })}
-          </tbody>
-        </table>
+            <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
+              <div style={{ minWidth: 220 }}>
+                <Input
+                  value={searchText}
+                  placeholder="아이템명 검색"
+                  onChange={(e) => setSearchText(e.target.value)}
+                />
+              </div>
+              <Button onClick={openCreateModal}>생성</Button>
+            </div>
+          </div>
+
+          <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: '#1a1a2e', borderRadius: 8, overflow: 'hidden' }}>
+            <thead style={{ backgroundColor: '#16213e' }}>
+              <tr>
+                <th style={thStyle}>이미지</th>
+                <th style={thStyle}>이름</th>
+                <th style={thStyle}>카테고리</th>
+                <th style={thStyle}>타입</th>
+                <th style={thStyle}>등급</th>
+                <th style={thStyle}>공격</th>
+                <th style={thStyle}>방어</th>
+                <th style={thStyle}>HP</th>
+                <th style={thStyle}>판매가</th>
+                <th style={thStyle}>구매가</th>
+                <th style={thStyle}>액션</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredRows.map((row) => {
+                const isUploading = uploadingId === row.id;
+
+                return (
+                  <tr
+                    key={row.id}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLTableRowElement).style.backgroundColor = '#252545'; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLTableRowElement).style.backgroundColor = 'transparent'; }}
+                  >
+                    <td style={tdStyle}>
+                      {isUploading ? (
+                        <Spinner />
+                      ) : row.imageUrl ? (
+                        <div style={{ position: 'relative', display: 'inline-block', width: 40, height: 40 }}>
+                          <img
+                            src={row.imageUrl}
+                            alt={row.name}
+                            style={{ width: 40, height: 40, borderRadius: 6, objectFit: 'cover' }}
+                          />
+                          <button
+                            onClick={() => handleImageDelete(row.id)}
+                            style={{
+                              position: 'absolute',
+                              top: -6,
+                              right: -6,
+                              width: 18,
+                              height: 18,
+                              borderRadius: '50%',
+                              backgroundColor: '#e74c3c',
+                              color: '#fff',
+                              border: 'none',
+                              fontSize: 11,
+                              lineHeight: '18px',
+                              textAlign: 'center',
+                              cursor: 'pointer',
+                              padding: 0,
+                            }}
+                          >
+                            X
+                          </button>
+                        </div>
+                      ) : (
+                        <label style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: 6, backgroundColor: '#252545', border: '1px dashed #555', cursor: 'pointer', fontSize: 18, color: '#666' }}>
+                          +
+                          <input
+                            type="file"
+                            accept="image/*"
+                            style={{ display: 'none' }}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleImageUpload(row.id, file);
+                            }}
+                          />
+                        </label>
+                      )}
+                    </td>
+                    <td style={tdStyle}>{row.name}</td>
+                    <td style={tdStyle}>{getCategoryLabel(row)}</td>
+                    <td style={tdStyle}>{TYPE_LABELS[row.type]}</td>
+                    <td style={tdStyle}>
+                      <span style={{ color: RARITY_COLORS[row.rarity], fontWeight: 600 }}>{RARITY_LABELS[row.rarity]}</span>
+                    </td>
+                    <td style={tdStyle}>{row.baseAttack}</td>
+                    <td style={tdStyle}>{row.baseDefense}</td>
+                    <td style={tdStyle}>{row.baseHp}</td>
+                    <td style={tdStyle}>{row.sellPrice}</td>
+                    <td style={tdStyle}>{row.buyPrice}</td>
+                    <td style={tdStyle}>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <AdminActionIconButton kind="edit" onClick={() => openEditModal(row)} />
+                        <AdminActionIconButton kind="delete" onClick={() => remove(row.id)} />
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+              {filteredRows.length === 0 && (
+                <tr>
+                  <td colSpan={11} style={{ ...tdStyle, textAlign: 'center', color: '#777' }}>
+                    조건에 맞는 아이템이 없습니다.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       )}
 
-      <Modal isOpen={!!editingId} onClose={closeEditModal} title="아이템 수정">
-        <div style={{ display: 'grid', gap: 10 }}>
-          <Input value={editing.name} placeholder="이름" onChange={(e) => setEditing((p) => ({ ...p, name: e.target.value }))} />
-          <Input value={editing.category} placeholder="카테고리" onChange={(e) => setEditing((p) => ({ ...p, category: e.target.value }))} />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            <select value={editing.type} onChange={(e) => setEditing((p) => ({ ...p, type: e.target.value as ItemType }))} style={selectStyle}>
-              {TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
-            <select value={editing.rarity} onChange={(e) => setEditing((p) => ({ ...p, rarity: e.target.value as ItemRarity }))} style={selectStyle}>
-              {RARITIES.map((r) => <option key={r} value={r}>{r}</option>)}
-            </select>
-            <Input type="number" value={String(editing.baseAttack)} onChange={(e) => changeNum(setEditing, 'baseAttack', e.target.value)} />
-            <Input type="number" value={String(editing.baseDefense)} onChange={(e) => changeNum(setEditing, 'baseDefense', e.target.value)} />
-            <Input type="number" value={String(editing.baseHp)} onChange={(e) => changeNum(setEditing, 'baseHp', e.target.value)} />
-            <Input type="number" value={String(editing.sellPrice)} onChange={(e) => changeNum(setEditing, 'sellPrice', e.target.value)} />
-            <Input type="number" value={String(editing.buyPrice)} onChange={(e) => changeNum(setEditing, 'buyPrice', e.target.value)} />
-          </div>
-          <Input value={editing.description} placeholder="설명" onChange={(e) => setEditing((p) => ({ ...p, description: e.target.value }))} />
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 6 }}>
-            <Button variant="ghost" onClick={closeEditModal}>취소</Button>
-            <Button loading={saving} onClick={saveEdit}>저장</Button>
-          </div>
-        </div>
-      </Modal>
+      <AdminCrudModalForm
+        isOpen={createOpen}
+        onClose={closeCreateModal}
+        onSubmit={saveCreate}
+        title="아이템 생성"
+        submitLabel="생성"
+        loading={saving}
+      >
+        {renderForm(creating, setCreating)}
+      </AdminCrudModalForm>
+
+      <AdminCrudModalForm
+        isOpen={!!editingId}
+        onClose={closeEditModal}
+        onSubmit={saveEdit}
+        title="아이템 수정"
+        submitLabel="저장"
+        loading={saving}
+      >
+        {renderForm(editing, setEditing)}
+      </AdminCrudModalForm>
     </AdminLayout>
   );
 }
