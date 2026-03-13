@@ -63,7 +63,7 @@ function HpBar({
       </div>
       {showNumbers && (
         <div style={{ textAlign: 'right', fontSize: '13px', fontWeight: 700, color: '#eee', marginTop: '1px', fontFamily: 'monospace' }}>
-          {current}<span style={{ color: '#888', margin: '0 3px' }}>/</span>{max}
+          {Math.max(0, current)}<span style={{ color: '#888', margin: '0 3px' }}>/</span>{max}
         </div>
       )}
     </div>
@@ -603,7 +603,7 @@ function BattleContent() {
       `}</style>
 
       {/* ─── Top: Dungeon Progress + Enemy ─── */}
-      <div style={{ flexShrink: 0, paddingTop: 'env(safe-area-inset-top)' }}>
+      <div style={{ flexShrink: 0, paddingTop: 'calc(58px + env(safe-area-inset-top))' }}>
         {/* Dungeon Progress Bar */}
         {progress && (
           <div
@@ -743,7 +743,7 @@ function BattleContent() {
       <div style={{ flex: 1 }} />
 
       {/* ─── Bottom Fixed: Player + Log + Buttons ─── */}
-      <div style={{ flexShrink: 0, paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      <div style={{ flexShrink: 0, paddingBottom: 'calc(64px + env(safe-area-inset-bottom))' }}>
         {/* Player Area */}
         <div
           style={{

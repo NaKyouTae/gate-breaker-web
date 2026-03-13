@@ -33,7 +33,12 @@
       "Bash(docker exec:*)",
       "Bash(mkdir -p /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/app/src/app/codex/items/[id])",
       "Bash(mkdir -p /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/app/src/app/codex/monsters/[id])",
-      "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/app -type f \\\\\\(-name middleware.ts -o -name *.config.js -o -name *.config.ts \\\\\\))"
+      "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/app -type f \\\\\\(-name middleware.ts -o -name *.config.js -o -name *.config.ts \\\\\\))",
+      "Bash(find /Users/nakyutae/personal/git/workfolio-backend/src/main/kotlin -type f -name \"*.kt\" -exec wc -l {} +)",
+      "Bash(wc -l /Users/nakyutae/personal/git/workfolio-backend/src/main/kotlin/com/spectrum/workfolio/controllers/*.kt)",
+      "Bash(grep -r \"schedule\\\\|quartz\\\\|batch\\\\|job\\\\|cron\" /Users/nakyutae/personal/git/workfolio-backend/src/main/kotlin --include=*.kt -l)",
+      "Bash(find /Users/nakyutae/personal/git/workfolio-backend/src/main/kotlin -type f -name \"*.kt\" -exec grep -l \"@Bean\\\\|fun.*\\\\\\(\\\\\\)\" {})",
+      "Bash(grep -r \"fun \\\\|@\\\\|schedule\\\\|quartz\\\\|batch\" /Users/nakyutae/personal/git/workfolio-backend/src/main/resources --include=*.properties)"
     ],
     "additionalDirectories": [
       "/Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/admin/.next",
