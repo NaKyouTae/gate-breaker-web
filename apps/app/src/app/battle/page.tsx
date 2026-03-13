@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { Suspense, useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { battle as battleApi, dungeon as dungeonApi } from '@gate-breaker/api-client';
 import type { BattleSession } from '@gate-breaker/types';
@@ -98,7 +98,7 @@ function clearDungeonProgress() {
   }
 }
 
-export default function BattlePage() {
+function BattleContent() {
   const { isLoading: authLoading, isAuthenticated, user: authUser } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -1103,5 +1103,17 @@ export default function BattlePage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function BattlePage() {
+  return (
+    <Suspense fallback={
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#0a0a0f' }}>
+        <Spinner size="lg" />
+      </div>
+    }>
+      <BattleContent />
+    </Suspense>
   );
 }
