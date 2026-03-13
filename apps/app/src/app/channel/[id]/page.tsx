@@ -57,6 +57,16 @@ const ITEM_TYPE_ICONS: Record<string, string> = {
 
 const MAX_CHANNEL_ENTRIES = 50;
 
+function formatChatTime(timestamp: number): string {
+  const date = new Date(timestamp);
+  const yy = String(date.getFullYear());
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  const hh = String(date.getHours()).padStart(2, '0');
+  const min = String(date.getMinutes()).padStart(2, '0');
+  return `${yy}-${mm}-${dd} ${hh}:${min}`;
+}
+
 export default function ChannelDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -437,6 +447,7 @@ export default function ChannelDetailPage() {
             <div style={{ color: '#666', textAlign: 'center', paddingTop: 30 }}>아직 채팅이 없습니다.</div>
           ) : (
             sortedEntries.map((entry, idx) => {
+              const timeText = formatChatTime(Number(entry.timestamp));
               if (entry.kind === 'system') {
                 const mineSystem = entry.userId === user?.id;
                 return (
@@ -450,7 +461,12 @@ export default function ChannelDetailPage() {
                       paddingRight: mineSystem ? 0 : 72,
                     }}
                   >
-                    <SystemMessageBubble msg={entry} />
+                    <div style={{ maxWidth: '86%' }}>
+                      <SystemMessageBubble msg={entry} />
+                      <div style={{ marginTop: 4, textAlign: 'right', color: '#666', fontSize: 10 }}>
+                        {timeText}
+                      </div>
+                    </div>
                   </div>
                 );
               }
@@ -473,19 +489,23 @@ export default function ChannelDetailPage() {
                   }}
                 >
                   {mine ? (
-                    <div
-                      style={{
-                        background: '#3d2566',
-                        color: '#eee',
-                        borderRadius: 12,
-                        padding: '7px 10px',
-                        maxWidth: '76%',
-                        wordBreak: 'break-word',
-                        fontSize: 13,
-                        lineHeight: 1.35,
-                      }}
-                    >
-                      {entry.message}
+                    <div style={{ maxWidth: '76%' }}>
+                      <div
+                        style={{
+                          background: '#3d2566',
+                          color: '#eee',
+                          borderRadius: 12,
+                          padding: '7px 10px',
+                          wordBreak: 'break-word',
+                          fontSize: 13,
+                          lineHeight: 1.35,
+                        }}
+                      >
+                        {entry.message}
+                      </div>
+                      <div style={{ marginTop: 4, textAlign: 'right', color: '#666', fontSize: 10 }}>
+                        {timeText}
+                      </div>
                     </div>
                   ) : (
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, maxWidth: '86%' }}>
@@ -532,6 +552,9 @@ export default function ChannelDetailPage() {
                           }}
                         >
                           {entry.message}
+                        </div>
+                        <div style={{ marginTop: 4, textAlign: 'right', color: '#666', fontSize: 10 }}>
+                          {timeText}
                         </div>
                       </div>
                     </div>

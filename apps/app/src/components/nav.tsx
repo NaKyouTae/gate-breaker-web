@@ -105,29 +105,44 @@ export function TopHud() {
             </span>
           </div>
           {/* EXP progress bar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '140px' }}>
+          <div
+            style={{
+              position: 'relative',
+              width: '140px',
+              height: '12px',
+              background: 'rgba(255,255,255,0.08)',
+              borderRadius: '6px',
+              overflow: 'hidden',
+            }}
+          >
             <div
               style={{
-                flex: 1,
-                height: '4px',
-                background: 'rgba(124,58,237,0.15)',
-                borderRadius: '2px',
-                overflow: 'hidden',
+                width: `${expPct}%`,
+                height: '100%',
+                background: 'linear-gradient(90deg, #22c55e, #4ade80)',
+                borderRadius: '6px',
+                transition: 'width 0.5s ease',
+                boxShadow: '0 0 4px rgba(34,197,94,0.5)',
+              }}
+            />
+            <span
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '8px',
+                fontWeight: 700,
+                color: '#fff',
+                textShadow: '0 0 2px rgba(0,0,0,0.8)',
+                lineHeight: 1,
               }}
             >
-              <div
-                style={{
-                  width: `${expPct}%`,
-                  height: '100%',
-                  background: 'linear-gradient(90deg, #22c55e, #4ade80)',
-                  borderRadius: '2px',
-                  transition: 'width 0.5s ease',
-                  boxShadow: '0 0 4px rgba(34,197,94,0.5)',
-                }}
-              />
-            </div>
-            <span style={{ fontSize: '9px', color: '#7c3aed', fontWeight: 600, whiteSpace: 'nowrap' }}>
-              {Math.floor(expPct)}%
+              {user.exp.toLocaleString()} / {requiredExp.toLocaleString()}
             </span>
           </div>
         </div>
