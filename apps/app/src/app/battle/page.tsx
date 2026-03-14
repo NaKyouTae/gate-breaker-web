@@ -82,7 +82,7 @@ interface DungeonProgress {
   monsterLevels: number[];
 }
 
-const DUNGEON_MENU_ROUTE = '/dungeon';
+const DUNGEON_MENU_ROUTE = '/dashboard';
 
 function getDungeonProgress(): DungeonProgress | null {
   if (typeof window === 'undefined') return null;
