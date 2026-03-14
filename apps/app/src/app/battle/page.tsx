@@ -44,10 +44,10 @@ function HpBar({
           style={{
             flex: 1,
             height: `${height}px`,
-            background: '#333',
-            borderRadius: '2px',
+            background: 'rgba(255,255,255,0.06)',
+            borderRadius: '4px',
             overflow: 'hidden',
-            border: '1px solid #555',
+            border: '1px solid rgba(255,255,255,0.08)',
           }}
         >
           <div
@@ -55,8 +55,9 @@ function HpBar({
               width: `${pct}%`,
               height: '100%',
               background: barColor,
-              borderRadius: '1px',
+              borderRadius: '3px',
               transition: 'width 0.6s ease, background-color 0.4s ease',
+              boxShadow: `0 0 6px ${barColor}44`,
             }}
           />
         </div>
@@ -80,6 +81,8 @@ interface DungeonProgress {
   isBossNext: boolean;
   monsterLevels: number[];
 }
+
+const DUNGEON_MENU_ROUTE = '/dungeon';
 
 function getDungeonProgress(): DungeonProgress | null {
   if (typeof window === 'undefined') return null;
@@ -130,6 +133,9 @@ function BattleContent() {
   const [autoAttack, setAutoAttack] = useState(false);
   const autoAttackRef = useRef(false);
   autoAttackRef.current = autoAttack;
+  const [speedUp, setSpeedUp] = useState(false);
+  const speedUpRef = useRef(false);
+  speedUpRef.current = speedUp;
   const actingRef = useRef(false);
   actingRef.current = acting;
   const transitioningRef = useRef(false);
@@ -138,6 +144,11 @@ function BattleContent() {
   sessionRef.current = session;
   const dungeonProgressRef = useRef(dungeonProgress);
   dungeonProgressRef.current = dungeonProgress;
+
+  const delay = useCallback((ms: number) => {
+    const actual = speedUpRef.current ? ms / 2 : ms;
+    return new Promise(r => setTimeout(r, actual));
+  }, []);
 
   const tryRecoverSession = useCallback(async () => {
     const progress = getDungeonProgress();
@@ -173,10 +184,11 @@ function BattleContent() {
       const monsterCount = Math.floor(Math.random() * 3) + 3;
       const total = hasResumeProgress ? resumeTotalRaw : monsterCount + 1;
       const currentMonsterIndex = hasResumeProgress ? resumeIndexRaw : 0;
-      const monsterLevels = Array.from({ length: total }, (_, i) => {
-        if (i === total - 1) return maxLv + Math.floor(Math.random() * 2) + 1;
-        return minLv + Math.floor(Math.random() * (maxLv - minLv + 1));
-      });
+      const regularLevels = Array.from({ length: total - 1 }, () =>
+        minLv + Math.floor(Math.random() * (maxLv - minLv + 1)),
+      ).sort((a, b) => a - b);
+      const bossLevel = Math.max(...regularLevels, maxLv) + Math.floor(Math.random() * 2) + 1;
+      const monsterLevels = [...regularLevels, bossLevel];
       const progress: DungeonProgress = {
         dungeonId,
         dungeonName: dgName,
@@ -226,7 +238,7 @@ function BattleContent() {
       } catch {
         addToast('진행 중인 전투가 없습니다.', 'warning');
         clearDungeonProgress();
-        router.replace('/dungeon');
+        router.replace(DUNGEON_MENU_ROUTE);
       } finally {
         setLoading(false);
       }
@@ -247,7 +259,7 @@ function BattleContent() {
         if (!recovered) {
           addToast('전투 세션이 만료되었습니다.', 'warning');
           clearDungeonProgress();
-          router.replace('/dungeon');
+          router.replace(DUNGEON_MENU_ROUTE);
         }
       }
     }, 30000);
@@ -282,12 +294,12 @@ function BattleContent() {
 
     // Show victory banner
     setShowVictoryBanner(true);
-    await new Promise(r => setTimeout(r, 800));
+    await delay(800);
     setShowVictoryBanner(false);
 
     // Monster death animation (for ALL monsters including last)
     setMonsterAnim('exiting');
-    await new Promise(r => setTimeout(r, 700));
+    await delay(700);
 
     if (isLastMonster) {
       try { await battleApi.confirm(); } catch { /* ignore */ }
@@ -313,19 +325,19 @@ function BattleContent() {
     try {
       await battleApi.confirm();
       // Small pause before entering next battle
-      await new Promise(r => setTimeout(r, 300));
+      await delay(300);
       await dungeonApi.enter(currentProgress.dungeonId);
       const newSession = await battleApi.status();
       setSession(newSession);
       // Monster enter animation
       setMonsterAnim('entering');
-      await new Promise(r => setTimeout(r, 600));
+      await delay(600);
       setMonsterAnim('idle');
     } catch (err) {
       console.error('Failed to transition to next monster:', err);
       addToast('다음 몬스터 조우에 실패했습니다.', 'error');
       clearDungeonProgress();
-      router.push('/dungeon');
+      router.push(DUNGEON_MENU_ROUTE);
     } finally {
       setTransitioning(false);
       transitioningRef.current = false;
@@ -340,7 +352,7 @@ function BattleContent() {
 
     const timer = setTimeout(() => {
       processVictoryTransition();
-    }, 800);
+    }, speedUpRef.current ? 400 : 800);
     return () => clearTimeout(timer);
     // Only depend on session.result changing - processVictoryTransition is stable
   }, [session?.result, processVictoryTransition]);
@@ -378,7 +390,7 @@ function BattleContent() {
         setAttackShake(true);
         setMonsterHitFlash(true);
         setDamageNumber(enemyDmg);
-        await new Promise(r => setTimeout(r, 600));
+        await delay(600);
         setAttackShake(false);
         setMonsterHitFlash(false);
         setDamageNumber(null);
@@ -395,20 +407,20 @@ function BattleContent() {
 
       // Phase 2: Monster counter-attack after delay
       if (playerDmg > 0) {
-        await new Promise(r => setTimeout(r, 900));
+        await delay(900);
         setMonsterAttacking(true);
-        await new Promise(r => setTimeout(r, 300));
+        await delay(300);
         setMonsterAttacking(false);
         setPlayerHitFlash(true);
         setPlayerDamageNumber(playerDmg);
         // Now update player HP and show full logs including monster attack
         setSession({ ...updated, log: allLogs });
-        await new Promise(r => setTimeout(r, 500));
+        await delay(500);
         setPlayerHitFlash(false);
         setPlayerDamageNumber(null);
       } else {
         // Monster missed or no counter-attack
-        await new Promise(r => setTimeout(r, 900));
+        await delay(900);
         setSession({ ...updated, log: allLogs });
       }
 
@@ -422,7 +434,7 @@ function BattleContent() {
         const msg = err instanceof Error ? err.message : '공격에 실패했습니다.';
         addToast(msg, 'error');
         clearDungeonProgress();
-        router.replace('/dungeon');
+        router.replace(DUNGEON_MENU_ROUTE);
       }
     } finally {
       setActing(false);
@@ -446,9 +458,9 @@ function BattleContent() {
       if (!currentResult) {
         handleAttack();
       }
-    }, 1500);
+    }, speedUp ? 750 : 1500);
     return () => clearInterval(interval);
-  }, [autoAttack, session?.result, handleAttack]);
+  }, [autoAttack, speedUp, session?.result, handleAttack]);
 
   // Turn off auto-attack on battle end (not on dungeon victory)
   useEffect(() => {
@@ -477,7 +489,7 @@ function BattleContent() {
         const msg = err instanceof Error ? err.message : '도주에 실패했습니다.';
         addToast(msg, 'error');
         clearDungeonProgress();
-        router.replace('/dungeon');
+        router.replace(DUNGEON_MENU_ROUTE);
       }
     } finally {
       setActing(false);
@@ -488,13 +500,13 @@ function BattleContent() {
     try { await battleApi.confirm(); } catch { /* ignore */ }
     clearDungeonProgress();
     await refreshUser();
-    router.push('/dungeon');
+    router.push(DUNGEON_MENU_ROUTE);
   }, [router, refreshUser]);
 
   const handleEscapeConfirm = useCallback(async () => {
     setShowEscapeScreen(false);
     await refreshUser();
-    router.push('/dungeon');
+    router.push(DUNGEON_MENU_ROUTE);
   }, [router, refreshUser]);
 
   const handleOpenBag = useCallback(async () => {
@@ -548,12 +560,12 @@ function BattleContent() {
     setShowDungeonClear(false);
     setTotalRewards({ exp: 0, gold: 0, items: [] });
     await refreshUser();
-    router.push('/dungeon');
+    router.push(DUNGEON_MENU_ROUTE);
   }, [router, refreshUser]);
 
   if (authLoading || loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#13101e' }}>
         <Spinner size="lg" />
       </div>
     );
@@ -582,10 +594,26 @@ function BattleContent() {
         position: 'fixed',
         inset: 0,
         zIndex: 150,
-        background: '#0a0a0f',
+        display: 'flex',
+        justifyContent: 'center',
+        background: '#050508',
+      }}
+    >
+    <div
+      style={{
+        width: '100%',
+        maxWidth: '430px',
+        height: '100%',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
+        background: '#13101e',
+        backgroundImage: 'url(/bg-dungeon.svg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center top',
+        backgroundRepeat: 'no-repeat',
+        boxShadow: '0 0 60px rgba(124,58,237,0.08), 0 0 40px rgba(0,0,0,0.5)',
+        position: 'relative',
       }}
     >
       <style>{`
@@ -699,12 +727,13 @@ function BattleContent() {
         {progress && (
           <div
             style={{
-              padding: '8px 16px',
-              background: 'rgba(26,26,46,0.9)',
-              borderBottom: '1px solid rgba(255,255,255,0.06)',
+              padding: '10px 16px',
+              background: 'linear-gradient(180deg, rgba(19,16,30,0.95), rgba(19,16,30,0.7))',
+              borderBottom: '1px solid rgba(124,58,237,0.12)',
               display: 'flex',
               flexDirection: 'column',
               gap: '6px',
+              backdropFilter: 'blur(8px)',
             }}
           >
             {progress.dungeonName && (
@@ -713,26 +742,31 @@ function BattleContent() {
               </span>
             )}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '10px', color: '#888', fontWeight: 600, whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: '10px', color: '#a78bfa', fontWeight: 700, whiteSpace: 'nowrap', letterSpacing: '0.5px' }}>
               {currentMonsterNum}/{totalMonsters}
             </span>
-            <div style={{ flex: 1, display: 'flex', gap: '2px' }}>
+            <div style={{ flex: 1, display: 'flex', gap: '3px' }}>
               {Array.from({ length: totalMonsters }).map((_, i) => (
                 <div
                   key={i}
                   style={{
                     flex: 1,
-                    height: '3px',
+                    height: '4px',
                     borderRadius: '2px',
                     background:
                       i < progress.currentMonsterIndex
-                        ? '#2ecc71'
+                        ? 'linear-gradient(90deg, #7c3aed, #a78bfa)'
                         : i === progress.currentMonsterIndex
-                          ? '#fbbf24'
+                          ? 'linear-gradient(90deg, #fbbf24, #f59e0b)'
                           : i === totalMonsters - 1
-                            ? 'rgba(233,69,96,0.3)'
-                            : 'rgba(255,255,255,0.1)',
+                            ? 'rgba(233,69,96,0.25)'
+                            : 'rgba(255,255,255,0.08)',
                     transition: 'background 0.3s ease',
+                    boxShadow: i < progress.currentMonsterIndex
+                      ? '0 0 6px rgba(124,58,237,0.3)'
+                      : i === progress.currentMonsterIndex
+                        ? '0 0 6px rgba(251,191,36,0.4)'
+                        : 'none',
                   }}
                 />
               ))}
@@ -755,11 +789,12 @@ function BattleContent() {
         >
           <div
             style={{
-              background: 'linear-gradient(135deg, #1e1e30, #16162a)',
-              border: '2px solid #333',
-              borderRadius: '10px',
-              padding: '8px 12px',
+              background: 'rgba(17, 18, 40, 0.75)',
+              border: isBossMonster ? '1.5px solid rgba(233,69,96,0.4)' : '1.5px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '12px',
+              padding: '10px 14px',
               width: '55%',
+              backdropFilter: 'blur(8px)',
               animation: monsterAnim === 'exiting'
                 ? 'monsterInfoExit 0.6s ease-in forwards'
                 : monsterAnim === 'entering'
@@ -889,10 +924,11 @@ function BattleContent() {
           <div
             style={{
               flex: 1,
-              background: 'linear-gradient(135deg, #1e1e30, #16162a)',
-              border: playerHitFlash ? '2px solid rgba(233,69,96,0.6)' : '2px solid #333',
-              borderRadius: '10px',
-              padding: '8px 12px',
+              background: 'rgba(17, 18, 40, 0.75)',
+              border: playerHitFlash ? '1.5px solid rgba(233,69,96,0.6)' : '1.5px solid rgba(167, 139, 250, 0.2)',
+              borderRadius: '12px',
+              padding: '10px 14px',
+              backdropFilter: 'blur(8px)',
               transition: 'border-color 0.3s ease',
             }}
           >
@@ -903,7 +939,7 @@ function BattleContent() {
             <HpBar current={session.playerHp} max={session.playerMaxHp} height={7} showNumbers />
             <div style={{ marginTop: '3px', display: 'flex', gap: '10px', fontSize: '10px', color: '#666' }}>
               <span>ATK <span style={{ color: '#e94560', fontWeight: 700 }}>{session.playerAttack}</span></span>
-              <span>DEF <span style={{ color: '#533483', fontWeight: 700 }}>{session.playerDefense}</span></span>
+              <span>DEF <span style={{ color: '#a78bfa', fontWeight: 700 }}>{session.playerDefense}</span></span>
             </div>
           </div>
         </div>
@@ -911,13 +947,14 @@ function BattleContent() {
         {/* Battle Log - 2 lines height */}
         <div
           style={{
-            margin: '4px 14px',
-            background: '#111118',
+            margin: '6px 14px',
+            background: 'rgba(17, 18, 40, 0.6)',
             border: '1px solid rgba(255,255,255,0.06)',
-            borderRadius: '6px',
-            padding: '4px 10px',
+            borderRadius: '10px',
+            padding: '6px 12px',
             height: '76px',
             overflowY: 'auto',
+            backdropFilter: 'blur(4px)',
           }}
         >
           {session.log.length === 0 ? (
@@ -994,16 +1031,62 @@ function BattleContent() {
                 />
               </div>
             </button>
+            {/* Speed x2 Toggle */}
+            <button
+              onClick={() => setSpeedUp(prev => !prev)}
+              disabled={!!session.result || transitioning}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: 'none',
+                border: 'none',
+                cursor: session.result || transitioning ? 'default' : 'pointer',
+                padding: '4px 8px',
+                borderRadius: '6px',
+                opacity: session.result || transitioning ? 0.35 : 1,
+              }}
+            >
+              <span style={{ fontSize: '11px', color: speedUp ? '#fbbf24' : '#666', fontWeight: 600 }}>
+                x2
+              </span>
+              <div
+                style={{
+                  width: '34px',
+                  height: '18px',
+                  borderRadius: '9px',
+                  background: speedUp ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : '#333',
+                  border: `1px solid ${speedUp ? '#f59e0b' : '#555'}`,
+                  position: 'relative',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <div
+                  style={{
+                    width: '14px',
+                    height: '14px',
+                    borderRadius: '50%',
+                    background: speedUp ? '#fff' : '#888',
+                    position: 'absolute',
+                    top: '1px',
+                    left: speedUp ? '17px' : '1px',
+                    transition: 'all 0.2s ease',
+                    boxShadow: speedUp ? '0 0 4px rgba(251,191,36,0.5)' : 'none',
+                  }}
+                />
+              </div>
+            </button>
           </div>
           <div
             style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
-              gap: '6px',
-              background: 'linear-gradient(135deg, #1a1a2e, #12121c)',
-              border: '2px solid #2a2a4a',
-              borderRadius: '12px',
-              padding: '10px',
+              gap: '8px',
+              background: 'rgba(17, 18, 40, 0.7)',
+              border: '1.5px solid rgba(124, 58, 237, 0.2)',
+              borderRadius: '14px',
+              padding: '12px',
+              backdropFilter: 'blur(8px)',
             }}
           >
             <Button
@@ -1395,13 +1478,14 @@ function BattleContent() {
         </div>
       )}
     </div>
+    </div>
   );
 }
 
 export default function BattlePage() {
   return (
     <Suspense fallback={
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#0a0a0f' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#13101e' }}>
         <Spinner size="lg" />
       </div>
     }>

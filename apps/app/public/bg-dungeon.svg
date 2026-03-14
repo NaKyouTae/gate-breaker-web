@@ -1,0 +1,380 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 430 932" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <!-- Brighter wall gradient -->
+    <linearGradient id="wallGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#252038"/>
+      <stop offset="30%" stop-color="#1e1830"/>
+      <stop offset="60%" stop-color="#181425"/>
+      <stop offset="100%" stop-color="#13101e"/>
+    </linearGradient>
+
+    <!-- Gold accent gradient -->
+    <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="50%" stop-color="#d4a017"/>
+      <stop offset="100%" stop-color="#b8860b"/>
+    </linearGradient>
+
+    <!-- Gem purple gradient -->
+    <radialGradient id="gemPurple" cx="0.35" cy="0.35" r="0.65">
+      <stop offset="0%" stop-color="#c4b5fd"/>
+      <stop offset="40%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#5b21b6"/>
+    </radialGradient>
+
+    <!-- Gem blue gradient -->
+    <radialGradient id="gemBlue" cx="0.35" cy="0.35" r="0.65">
+      <stop offset="0%" stop-color="#93c5fd"/>
+      <stop offset="40%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </radialGradient>
+
+    <!-- Top ambient light -->
+    <radialGradient id="topLight" cx="0.5" cy="0.05" r="0.5">
+      <stop offset="0%" stop-color="#a78bfa" stop-opacity="0.35"/>
+      <stop offset="50%" stop-color="#7c3aed" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Center ambient light -->
+    <radialGradient id="centerLight" cx="0.5" cy="0.45" r="0.45">
+      <stop offset="0%" stop-color="#a78bfa" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Torch glow left -->
+    <radialGradient id="torchGlow1" cx="0.12" cy="0.24" r="0.3">
+      <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.2"/>
+      <stop offset="40%" stop-color="#f97316" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#f97316" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Torch glow right -->
+    <radialGradient id="torchGlow2" cx="0.88" cy="0.24" r="0.3">
+      <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.18"/>
+      <stop offset="40%" stop-color="#f59e0b" stop-opacity="0.07"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Bottom fog -->
+    <linearGradient id="fogGrad" x1="0" y1="0.8" x2="0" y2="1">
+      <stop offset="0%" stop-color="#13101e" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#13101e" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#13101e" stop-opacity="0.85"/>
+    </linearGradient>
+
+    <!-- Soft vignette -->
+    <radialGradient id="vignette" cx="0.5" cy="0.5" r="0.75">
+      <stop offset="0%" stop-color="black" stop-opacity="0"/>
+      <stop offset="75%" stop-color="black" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="black" stop-opacity="0.4"/>
+    </radialGradient>
+
+    <!-- Stone texture filter -->
+    <filter id="stoneTexture">
+      <feTurbulence type="fractalNoise" baseFrequency="0.5" numOctaves="4" result="noise"/>
+      <feDiffuseLighting in="noise" lighting-color="#2a2440" surfaceScale="1.2" result="lit">
+        <feDistantLight azimuth="45" elevation="60"/>
+      </feDiffuseLighting>
+      <feComposite in="lit" in2="SourceGraphic" operator="in"/>
+      <feBlend in2="SourceGraphic" mode="soft-light"/>
+    </filter>
+
+    <!-- Gold shine filter -->
+    <filter id="goldShine">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Gem shine filter -->
+    <filter id="gemShine">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Base wall - brighter -->
+  <rect width="430" height="932" fill="url(#wallGrad)"/>
+
+  <!-- Stone texture -->
+  <rect width="430" height="932" fill="url(#wallGrad)" filter="url(#stoneTexture)" opacity="0.4"/>
+
+  <!-- ===== STONE BRICK ROWS ===== -->
+  <g opacity="0.2" stroke="#0d0a18" stroke-width="1" fill="none">
+    <!-- Horizontal mortar lines -->
+    <line x1="0" y1="65" x2="430" y2="65"/>
+    <line x1="0" y1="130" x2="430" y2="130"/>
+    <line x1="0" y1="195" x2="430" y2="195"/>
+    <line x1="0" y1="260" x2="430" y2="260"/>
+    <line x1="0" y1="325" x2="430" y2="325"/>
+    <line x1="0" y1="390" x2="430" y2="390"/>
+    <line x1="0" y1="455" x2="430" y2="455"/>
+    <line x1="0" y1="520" x2="430" y2="520"/>
+    <line x1="0" y1="585" x2="430" y2="585"/>
+    <line x1="0" y1="650" x2="430" y2="650"/>
+    <line x1="0" y1="715" x2="430" y2="715"/>
+    <line x1="0" y1="780" x2="430" y2="780"/>
+    <line x1="0" y1="845" x2="430" y2="845"/>
+    <line x1="0" y1="910" x2="430" y2="910"/>
+
+    <!-- Vertical mortar - alternating rows -->
+    <line x1="95" y1="0" x2="95" y2="65"/>
+    <line x1="215" y1="0" x2="215" y2="65"/>
+    <line x1="335" y1="0" x2="335" y2="65"/>
+
+    <line x1="55" y1="65" x2="55" y2="130"/>
+    <line x1="155" y1="65" x2="155" y2="130"/>
+    <line x1="275" y1="65" x2="275" y2="130"/>
+    <line x1="385" y1="65" x2="385" y2="130"/>
+
+    <line x1="105" y1="130" x2="105" y2="195"/>
+    <line x1="220" y1="130" x2="220" y2="195"/>
+    <line x1="345" y1="130" x2="345" y2="195"/>
+
+    <line x1="60" y1="195" x2="60" y2="260"/>
+    <line x1="170" y1="195" x2="170" y2="260"/>
+    <line x1="285" y1="195" x2="285" y2="260"/>
+    <line x1="395" y1="195" x2="395" y2="260"/>
+
+    <line x1="90" y1="260" x2="90" y2="325"/>
+    <line x1="200" y1="260" x2="200" y2="325"/>
+    <line x1="320" y1="260" x2="320" y2="325"/>
+
+    <line x1="50" y1="325" x2="50" y2="390"/>
+    <line x1="160" y1="325" x2="160" y2="390"/>
+    <line x1="275" y1="325" x2="275" y2="390"/>
+    <line x1="390" y1="325" x2="390" y2="390"/>
+
+    <line x1="100" y1="390" x2="100" y2="455"/>
+    <line x1="215" y1="390" x2="215" y2="455"/>
+    <line x1="340" y1="390" x2="340" y2="455"/>
+
+    <line x1="55" y1="455" x2="55" y2="520"/>
+    <line x1="165" y1="455" x2="165" y2="520"/>
+    <line x1="280" y1="455" x2="280" y2="520"/>
+    <line x1="385" y1="455" x2="385" y2="520"/>
+
+    <line x1="95" y1="520" x2="95" y2="585"/>
+    <line x1="210" y1="520" x2="210" y2="585"/>
+    <line x1="330" y1="520" x2="330" y2="585"/>
+
+    <line x1="60" y1="585" x2="60" y2="650"/>
+    <line x1="175" y1="585" x2="175" y2="650"/>
+    <line x1="290" y1="585" x2="290" y2="650"/>
+    <line x1="400" y1="585" x2="400" y2="650"/>
+
+    <line x1="105" y1="650" x2="105" y2="715"/>
+    <line x1="220" y1="650" x2="220" y2="715"/>
+    <line x1="340" y1="650" x2="340" y2="715"/>
+
+    <line x1="50" y1="715" x2="50" y2="780"/>
+    <line x1="160" y1="715" x2="160" y2="780"/>
+    <line x1="270" y1="715" x2="270" y2="780"/>
+    <line x1="380" y1="715" x2="380" y2="780"/>
+
+    <line x1="100" y1="780" x2="100" y2="845"/>
+    <line x1="215" y1="780" x2="215" y2="845"/>
+    <line x1="335" y1="780" x2="335" y2="845"/>
+
+    <line x1="55" y1="845" x2="55" y2="910"/>
+    <line x1="170" y1="845" x2="170" y2="910"/>
+    <line x1="285" y1="845" x2="285" y2="910"/>
+    <line x1="395" y1="845" x2="395" y2="910"/>
+  </g>
+
+  <!-- Subtle brick highlight (top edge of each brick) -->
+  <g opacity="0.06" stroke="#a78bfa" stroke-width="0.5" fill="none">
+    <line x1="0" y1="66" x2="430" y2="66"/>
+    <line x1="0" y1="131" x2="430" y2="131"/>
+    <line x1="0" y1="196" x2="430" y2="196"/>
+    <line x1="0" y1="261" x2="430" y2="261"/>
+    <line x1="0" y1="326" x2="430" y2="326"/>
+    <line x1="0" y1="391" x2="430" y2="391"/>
+    <line x1="0" y1="456" x2="430" y2="456"/>
+    <line x1="0" y1="521" x2="430" y2="521"/>
+    <line x1="0" y1="586" x2="430" y2="586"/>
+    <line x1="0" y1="651" x2="430" y2="651"/>
+    <line x1="0" y1="716" x2="430" y2="716"/>
+    <line x1="0" y1="781" x2="430" y2="781"/>
+    <line x1="0" y1="846" x2="430" y2="846"/>
+  </g>
+
+  <!-- ===== ORNATE GOLD BORDER FRAME ===== -->
+  <g filter="url(#goldShine)">
+    <!-- Top border -->
+    <rect x="8" y="8" width="414" height="2" rx="1" fill="url(#goldGrad)" opacity="0.35"/>
+    <!-- Bottom border -->
+    <rect x="8" y="922" width="414" height="2" rx="1" fill="url(#goldGrad)" opacity="0.2"/>
+    <!-- Left border -->
+    <rect x="8" y="8" width="1.5" height="916" rx="0.75" fill="url(#goldGrad)" opacity="0.15"/>
+    <!-- Right border -->
+    <rect x="420.5" y="8" width="1.5" height="916" rx="0.75" fill="url(#goldGrad)" opacity="0.15"/>
+
+    <!-- Corner ornaments -->
+    <!-- Top-left -->
+    <path d="M8,8 L28,8 L28,10 L10,10 L10,28 L8,28 Z" fill="url(#goldGrad)" opacity="0.4"/>
+    <circle cx="14" cy="14" r="2" fill="#fbbf24" opacity="0.5"/>
+    <!-- Top-right -->
+    <path d="M422,8 L402,8 L402,10 L420,10 L420,28 L422,28 Z" fill="url(#goldGrad)" opacity="0.4"/>
+    <circle cx="416" cy="14" r="2" fill="#fbbf24" opacity="0.5"/>
+    <!-- Bottom-left -->
+    <path d="M8,924 L28,924 L28,922 L10,922 L10,904 L8,904 Z" fill="url(#goldGrad)" opacity="0.25"/>
+    <!-- Bottom-right -->
+    <path d="M422,924 L402,924 L402,922 L420,922 L420,904 L422,904 Z" fill="url(#goldGrad)" opacity="0.25"/>
+  </g>
+
+  <!-- ===== ORNATE TORCH LEFT (bigger, more detailed) ===== -->
+  <g transform="translate(30, 230)">
+    <!-- Wall mount plate (gold) -->
+    <rect x="-2" y="-3" width="22" height="12" rx="2" fill="url(#goldGrad)" opacity="0.45"/>
+    <rect x="0" y="-1" width="18" height="8" rx="1.5" fill="#1a1528" opacity="0.7"/>
+    <!-- Torch arm -->
+    <rect x="6" y="-40" width="6" height="42" rx="2" fill="#3d2e1a" opacity="0.9"/>
+    <!-- Gold rings on torch -->
+    <rect x="5" y="-8" width="8" height="3" rx="1" fill="url(#goldGrad)" opacity="0.5"/>
+    <rect x="5" y="-38" width="8" height="3" rx="1" fill="url(#goldGrad)" opacity="0.5"/>
+    <!-- Flame outer glow -->
+    <ellipse cx="9" cy="-50" rx="12" ry="18" fill="#f97316" opacity="0.25"/>
+    <!-- Flame -->
+    <ellipse cx="9" cy="-50" rx="7" ry="12" fill="#f97316" opacity="0.7"/>
+    <ellipse cx="9" cy="-52" rx="4.5" ry="8" fill="#fbbf24" opacity="0.8"/>
+    <ellipse cx="9" cy="-54" rx="2.5" ry="5" fill="#fef3c7" opacity="0.9"/>
+    <!-- Sparks -->
+    <circle cx="4" cy="-65" r="0.8" fill="#fbbf24" opacity="0.6"/>
+    <circle cx="14" cy="-68" r="0.6" fill="#fef3c7" opacity="0.5"/>
+    <circle cx="7" cy="-70" r="0.5" fill="#fbbf24" opacity="0.4"/>
+  </g>
+
+  <!-- ===== ORNATE TORCH RIGHT ===== -->
+  <g transform="translate(382, 230)">
+    <rect x="-2" y="-3" width="22" height="12" rx="2" fill="url(#goldGrad)" opacity="0.45"/>
+    <rect x="0" y="-1" width="18" height="8" rx="1.5" fill="#1a1528" opacity="0.7"/>
+    <rect x="6" y="-40" width="6" height="42" rx="2" fill="#3d2e1a" opacity="0.9"/>
+    <rect x="5" y="-8" width="8" height="3" rx="1" fill="url(#goldGrad)" opacity="0.5"/>
+    <rect x="5" y="-38" width="8" height="3" rx="1" fill="url(#goldGrad)" opacity="0.5"/>
+    <ellipse cx="9" cy="-50" rx="12" ry="18" fill="#f97316" opacity="0.2"/>
+    <ellipse cx="9" cy="-50" rx="7" ry="12" fill="#f97316" opacity="0.6"/>
+    <ellipse cx="9" cy="-52" rx="4.5" ry="8" fill="#fbbf24" opacity="0.7"/>
+    <ellipse cx="9" cy="-54" rx="2.5" ry="5" fill="#fef3c7" opacity="0.85"/>
+    <circle cx="4" cy="-65" r="0.7" fill="#fbbf24" opacity="0.5"/>
+    <circle cx="15" cy="-67" r="0.5" fill="#fef3c7" opacity="0.4"/>
+  </g>
+
+  <!-- ===== LOWER TORCHES (dimmer) ===== -->
+  <g transform="translate(30, 580)" opacity="0.7">
+    <rect x="-2" y="-3" width="22" height="12" rx="2" fill="url(#goldGrad)" opacity="0.35"/>
+    <rect x="0" y="-1" width="18" height="8" rx="1.5" fill="#1a1528" opacity="0.7"/>
+    <rect x="6" y="-40" width="6" height="42" rx="2" fill="#3d2e1a" opacity="0.85"/>
+    <rect x="5" y="-8" width="8" height="3" rx="1" fill="url(#goldGrad)" opacity="0.4"/>
+    <rect x="5" y="-38" width="8" height="3" rx="1" fill="url(#goldGrad)" opacity="0.4"/>
+    <ellipse cx="9" cy="-50" rx="10" ry="15" fill="#f97316" opacity="0.15"/>
+    <ellipse cx="9" cy="-50" rx="6" ry="10" fill="#f97316" opacity="0.55"/>
+    <ellipse cx="9" cy="-52" rx="3.5" ry="6.5" fill="#fbbf24" opacity="0.65"/>
+    <ellipse cx="9" cy="-53" rx="2" ry="4" fill="#fef3c7" opacity="0.75"/>
+  </g>
+  <g transform="translate(382, 580)" opacity="0.7">
+    <rect x="-2" y="-3" width="22" height="12" rx="2" fill="url(#goldGrad)" opacity="0.35"/>
+    <rect x="0" y="-1" width="18" height="8" rx="1.5" fill="#1a1528" opacity="0.7"/>
+    <rect x="6" y="-40" width="6" height="42" rx="2" fill="#3d2e1a" opacity="0.85"/>
+    <rect x="5" y="-8" width="8" height="3" rx="1" fill="url(#goldGrad)" opacity="0.4"/>
+    <rect x="5" y="-38" width="8" height="3" rx="1" fill="url(#goldGrad)" opacity="0.4"/>
+    <ellipse cx="9" cy="-50" rx="10" ry="15" fill="#f97316" opacity="0.12"/>
+    <ellipse cx="9" cy="-50" rx="6" ry="10" fill="#f97316" opacity="0.5"/>
+    <ellipse cx="9" cy="-52" rx="3.5" ry="6.5" fill="#fbbf24" opacity="0.6"/>
+    <ellipse cx="9" cy="-53" rx="2" ry="4" fill="#fef3c7" opacity="0.7"/>
+  </g>
+
+  <!-- ===== DECORATIVE GOLD CHAINS ===== -->
+  <g opacity="0.2" stroke="url(#goldGrad)" stroke-width="1.5" fill="none">
+    <path d="M155,0 Q152,35 158,70 Q154,100 157,125"/>
+    <path d="M305,0 Q308,30 302,60 Q306,85 303,105"/>
+  </g>
+
+  <!-- ===== EMBEDDED GEMS IN WALL ===== -->
+  <!-- Gem 1 - purple, upper area -->
+  <g filter="url(#gemShine)" transform="translate(215, 155)">
+    <polygon points="0,-6 5,0 0,6 -5,0" fill="url(#gemPurple)" opacity="0.6"/>
+    <polygon points="0,-4 3,0 0,4 -3,0" fill="#c4b5fd" opacity="0.3"/>
+  </g>
+  <!-- Gem 2 - blue, mid-right -->
+  <g filter="url(#gemShine)" transform="translate(350, 400)">
+    <polygon points="0,-5 4,0 0,5 -4,0" fill="url(#gemBlue)" opacity="0.5"/>
+    <polygon points="0,-3 2.5,0 0,3 -2.5,0" fill="#93c5fd" opacity="0.3"/>
+  </g>
+  <!-- Gem 3 - purple, lower-left -->
+  <g filter="url(#gemShine)" transform="translate(80, 620)">
+    <polygon points="0,-5.5 4.5,0 0,5.5 -4.5,0" fill="url(#gemPurple)" opacity="0.45"/>
+    <polygon points="0,-3.5 2.5,0 0,3.5 -2.5,0" fill="#c4b5fd" opacity="0.25"/>
+  </g>
+  <!-- Gem 4 - blue, top-left -->
+  <g filter="url(#gemShine)" transform="translate(110, 95)">
+    <polygon points="0,-4 3.5,0 0,4 -3.5,0" fill="url(#gemBlue)" opacity="0.4"/>
+    <polygon points="0,-2.5 2,0 0,2.5 -2,0" fill="#93c5fd" opacity="0.25"/>
+  </g>
+
+  <!-- ===== ORNATE GOLD DECORATIVE ELEMENTS ===== -->
+  <!-- Gold line divider with diamond center - upper -->
+  <g transform="translate(115, 320)" filter="url(#goldShine)" opacity="0.3">
+    <line x1="0" y1="0" x2="80" y2="0" stroke="url(#goldGrad)" stroke-width="0.8"/>
+    <polygon points="100,0 95,-4 90,0 95,4" fill="url(#goldGrad)"/>
+    <line x1="110" y1="0" x2="200" y2="0" stroke="url(#goldGrad)" stroke-width="0.8"/>
+  </g>
+  <!-- Gold line divider - lower -->
+  <g transform="translate(130, 700)" filter="url(#goldShine)" opacity="0.2">
+    <line x1="0" y1="0" x2="65" y2="0" stroke="url(#goldGrad)" stroke-width="0.8"/>
+    <polygon points="85,0 80,-3.5 75,0 80,3.5" fill="url(#goldGrad)"/>
+    <line x1="95" y1="0" x2="170" y2="0" stroke="url(#goldGrad)" stroke-width="0.8"/>
+  </g>
+
+  <!-- ===== GLOWING RUNES (brighter, more magical) ===== -->
+  <g opacity="0.2" fill="#a78bfa" filter="url(#gemShine)">
+    <text x="145" y="170" font-size="16" font-family="serif">&#x16A0;</text>
+    <text x="305" y="290" font-size="14" font-family="serif">&#x16B7;</text>
+    <text x="85" y="440" font-size="18" font-family="serif">&#x16C1;</text>
+    <text x="355" y="500" font-size="15" font-family="serif">&#x16A2;</text>
+    <text x="205" y="750" font-size="16" font-family="serif">&#x16B9;</text>
+    <text x="330" y="810" font-size="14" font-family="serif">&#x16C7;</text>
+  </g>
+
+  <!-- ===== LIGHT EFFECTS ===== -->
+  <rect width="430" height="932" fill="url(#torchGlow1)"/>
+  <rect width="430" height="932" fill="url(#torchGlow2)"/>
+  <rect width="430" height="932" fill="url(#topLight)"/>
+  <rect width="430" height="932" fill="url(#centerLight)"/>
+
+  <!-- Lower torch glow on wall -->
+  <ellipse cx="39" cy="540" rx="100" ry="130" fill="#fbbf24" opacity="0.035"/>
+  <ellipse cx="391" cy="540" rx="100" ry="130" fill="#fbbf24" opacity="0.025"/>
+
+  <!-- ===== GROUND FOG ===== -->
+  <rect width="430" height="932" fill="url(#fogGrad)"/>
+  <g opacity="0.12">
+    <ellipse cx="100" cy="890" rx="130" ry="28" fill="#2d2640"/>
+    <ellipse cx="300" cy="905" rx="160" ry="22" fill="#231f35"/>
+    <ellipse cx="215" cy="915" rx="210" ry="32" fill="#1e1830"/>
+  </g>
+
+  <!-- ===== VIGNETTE (softer) ===== -->
+  <rect width="430" height="932" fill="url(#vignette)"/>
+
+  <!-- ===== FLOATING PARTICLES (brighter) ===== -->
+  <g opacity="0.65">
+    <circle cx="75" cy="140" r="1.2" fill="#c4b5fd"/>
+    <circle cx="355" cy="190" r="1" fill="#fbbf24"/>
+    <circle cx="195" cy="340" r="1.4" fill="#a78bfa"/>
+    <circle cx="125" cy="490" r="0.9" fill="#fbbf24"/>
+    <circle cx="315" cy="440" r="1.1" fill="#c4b5fd"/>
+    <circle cx="55" cy="690" r="1" fill="#fbbf24"/>
+    <circle cx="375" cy="640" r="1.3" fill="#a78bfa"/>
+    <circle cx="245" cy="790" r="1" fill="#fbbf24"/>
+    <circle cx="175" cy="590" r="1.1" fill="#c4b5fd"/>
+    <circle cx="395" cy="370" r="0.8" fill="#a78bfa"/>
+    <circle cx="280" cy="120" r="0.9" fill="#fbbf24"/>
+    <circle cx="150" cy="720" r="1.2" fill="#c4b5fd"/>
+  </g>
+</svg>

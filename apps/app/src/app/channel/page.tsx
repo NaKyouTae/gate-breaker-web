@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { channel } from '@gate-breaker/api-client';
 import type { Channel } from '@gate-breaker/types';
-import { Button, Input, Card, Modal, Spinner, useToast } from '@gate-breaker/ui';
+import { Input, Card, Modal, Spinner, useToast } from '@gate-breaker/ui';
 import { useAuth } from '@/context/auth-context';
 
 export default function ChannelListPage() {
@@ -18,11 +18,13 @@ export default function ChannelListPage() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [joining, setJoining] = useState<string | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Create modal
   const [createOpen, setCreateOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [createName, setCreateName] = useState('');
-  const [createMax, setCreateMax] = useState(4);
+  const [createMax, setCreateMax] = useState(6);
   const [creating, setCreating] = useState(false);
 
   const fetchChannels = useCallback(async () => {
@@ -71,6 +73,18 @@ export default function ChannelListPage() {
     }
   }, [searchOpen]);
 
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    if (dropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [dropdownOpen]);
+
   const handleJoin = async (ch: Channel) => {
     try {
       setJoining(ch.id);
@@ -95,7 +109,7 @@ export default function ChannelListPage() {
       addToast(`"${created.name}" 채널이 생성되었습니다.`, 'success');
       setCreateOpen(false);
       setCreateName('');
-      setCreateMax(4);
+      setCreateMax(6);
       router.push(`/channel/${created.id}`);
     } catch {
       addToast('채널 생성에 실패했습니다.', 'error');
@@ -138,32 +152,24 @@ export default function ChannelListPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
                 width: '100%',
-                height: '36px',
+                height: '38px',
                 borderRadius: '10px',
-                border: '1px solid #2a2a4a',
-                background: '#12121c',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                background: 'rgba(255, 255, 255, 0.04)',
+                backdropFilter: 'blur(4px)',
                 color: '#eee',
                 padding: '0 12px',
                 outline: 'none',
+                fontSize: '0.85rem',
+                transition: 'border-color 0.2s ease',
               }}
             />
           </div>
 
           <button
+            className="icon-btn"
             onClick={() => setSearchOpen((prev) => !prev)}
             aria-label="검색 열기"
-            style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '10px',
-              border: '1px solid #3a3a5a',
-              background: '#161625',
-              color: '#eee',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-            }}
           >
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8" />
@@ -172,23 +178,10 @@ export default function ChannelListPage() {
           </button>
 
           <button
+            className="icon-btn accent"
             onClick={() => setCreateOpen(true)}
             aria-label="채널 만들기"
-            style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '10px',
-              border: '1px solid #7f1d3f',
-              background: 'linear-gradient(135deg, #e94560, #d63a71)',
-              color: '#fff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              fontSize: '22px',
-              lineHeight: 1,
-              fontWeight: 700,
-            }}
+            style={{ fontSize: '22px', lineHeight: 1, fontWeight: 700 }}
           >
             +
           </button>
@@ -327,44 +320,103 @@ export default function ChannelListPage() {
             >
               최대 인원
             </label>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {Array.from({ length: 9 }, (_, i) => i + 2).map((n) => (
-                <button
-                  key={n}
-                  onClick={() => setCreateMax(n)}
+            <div ref={dropdownRef} style={{ position: 'relative' }}>
+              <button
+                type="button"
+                onClick={() => setDropdownOpen((prev) => !prev)}
+                style={{
+                  width: '100%',
+                  height: '44px',
+                  borderRadius: '10px',
+                  border: dropdownOpen ? '1px solid rgba(167, 139, 250, 0.5)' : '1px solid rgba(255, 255, 255, 0.08)',
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  backdropFilter: 'blur(4px)',
+                  color: '#eee',
+                  fontSize: '15px',
+                  fontWeight: 600,
+                  padding: '0 12px',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  transition: 'border-color 0.2s ease',
+                }}
+              >
+                <span>{createMax}명</span>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#aaa"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   style={{
-                    width: '40px',
-                    height: '40px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: '6px',
-                    border:
-                      createMax === n
-                        ? '2px solid #e94560'
-                        : '1px solid rgba(238, 238, 238, 0.15)',
-                    background: createMax === n ? 'rgba(233, 69, 96, 0.15)' : '#0a0a0f',
-                    color: createMax === n ? '#e94560' : '#aaa',
-                    fontSize: '15px',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    fontFamily: 'inherit',
-                    transition: 'all 0.15s ease',
+                    transform: dropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s ease',
                   }}
                 >
-                  {n}
-                </button>
-              ))}
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </button>
+              {dropdownOpen && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 4px)',
+                    left: 0,
+                    right: 0,
+                    background: 'rgba(22, 22, 37, 0.95)',
+                    backdropFilter: 'blur(8px)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '10px',
+                    overflow: 'hidden',
+                    zIndex: 10,
+                    maxHeight: '200px',
+                    overflowY: 'auto',
+                  }}
+                >
+                  {Array.from({ length: 9 }, (_, i) => i + 2).map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => {
+                        setCreateMax(n);
+                        setDropdownOpen(false);
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        background: createMax === n ? 'rgba(124, 58, 237, 0.15)' : 'transparent',
+                        color: createMax === n ? '#c4b5fd' : '#ccc',
+                        border: 'none',
+                        outline: 'none',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: createMax === n ? 700 : 500,
+                        fontFamily: 'inherit',
+                        textAlign: 'left',
+                        transition: 'background 0.15s ease',
+                      }}
+                    >
+                      {n}명
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-          <Button
-            variant="primary"
-            loading={creating}
+          <button
+            className="btn-action primary"
+            disabled={creating}
             onClick={handleCreate}
             style={{ width: '100%', marginTop: '4px' }}
           >
-            생성
-          </Button>
+            {creating ? '생성 중...' : '생성'}
+          </button>
         </div>
       </Modal>
     </div>

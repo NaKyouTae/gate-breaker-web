@@ -56,7 +56,7 @@ export function Sidebar({ isMobileOpen = false, onMobileClose, isMobile = false 
       <aside
         style={{
           width: 240,
-          height: '100vh',
+          height: '100dvh',
           backgroundColor: '#12122a',
           borderRight: '1px solid #2a2a4a',
           display: 'flex',
@@ -67,6 +67,7 @@ export function Sidebar({ isMobileOpen = false, onMobileClose, isMobile = false 
           zIndex: 100,
           transition: 'transform 0.3s ease',
           transform: isMobile ? (isMobileOpen ? 'translateX(0)' : 'translateX(-100%)') : 'translateX(0)',
+          overflowY: 'auto',
         }}
       >
         <div

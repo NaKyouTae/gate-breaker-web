@@ -1,11 +1,14 @@
 'use client';
 
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAnyModalOpen } from '@gate-breaker/ui';
 import { useAuth } from '@/context/auth-context';
+import { useCodexModal } from '@/context/codex-modal-context';
 
 function NavIcon({ type, active }: { type: string; active?: boolean }) {
-  const color = active ? '#c4b5fd' : '#666';
+  const color = active ? '#c4b5fd' : '#9090a0';
   const size = 24;
   const props = { width: size, height: size, viewBox: '-1 -1 26 26', fill: 'none', stroke: color, strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
 
@@ -93,194 +96,171 @@ function NavIcon({ type, active }: { type: string; active?: boolean }) {
 }
 
 const navItems = [
-  { href: '/dashboard', label: '프로필', iconType: 'home' },
-  { href: '/dungeon', label: '던전', iconType: 'dungeon' },
-  { href: '/inventory', label: '인벤토리', iconType: 'inventory' },
   { href: '/shop', label: '상점', iconType: 'shop' },
+  { href: '/dashboard', label: '전투', iconType: 'home' },
+  { href: '/inventory', label: '인벤토리', iconType: 'inventory' },
   { href: '/channel', label: '채널', iconType: 'channel' },
-  { href: '/codex', label: '도감', iconType: 'codex' },
 ];
 
-function MiniBar({ current, max, color }: { current: number; max: number; color: string }) {
-  const pct = max > 0 ? Math.min((current / max) * 100, 100) : 0;
-  return (
-    <div
-      style={{
-        width: '100%',
-        height: '6px',
-        background: 'rgba(255,255,255,0.08)',
-        borderRadius: '3px',
-        overflow: 'hidden',
-      }}
-    >
-      <div
-        style={{
-          width: `${pct}%`,
-          height: '100%',
-          background: color,
-          borderRadius: '3px',
-          transition: 'width 0.5s ease',
-        }}
-      />
-    </div>
-  );
-}
-
-function getRequiredExp(level: number): number {
-  return Math.floor(100 * Math.pow(level, 1.5));
-}
 
 export function TopHud() {
   const { user, isAuthenticated } = useAuth();
   const pathname = usePathname();
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!profileOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setProfileOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [profileOpen]);
 
   if (!isAuthenticated || !user || pathname.startsWith('/battle')) {
     return null;
   }
 
-  const requiredExp = getRequiredExp(user.level);
-  const expPct = requiredExp > 0 ? Math.min((user.exp / requiredExp) * 100, 100) : 0;
+  // EXP progress: requiredExp(level) = floor(100 * level^1.5)
+  const cumulativeExp = (lvl: number) => {
+    let sum = 0;
+    for (let k = 1; k < lvl; k++) sum += Math.floor(100 * Math.pow(k, 1.5));
+    return sum;
+  };
+  const levelStartExp = cumulativeExp(user.level);
+  const requiredExpForLevel = Math.floor(100 * Math.pow(user.level, 1.5));
+  const currentExpInLevel = Math.max(0, user.exp - levelStartExp);
+  const expPercent = requiredExpForLevel > 0 ? Math.min(100, Math.round((currentExpInLevel / requiredExpForLevel) * 100)) : 0;
 
   return (
     <div
       style={{
         position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
+        top: 'max(8px, env(safe-area-inset-top, 8px))',
+        left: '8px',
+        right: '8px',
         zIndex: 100,
-        background: 'linear-gradient(180deg, rgba(10,10,15,0.97) 0%, rgba(10,10,15,0.92) 100%)',
-        backdropFilter: 'blur(10px)',
-        borderBottom: '1px solid rgba(124,58,237,0.2)',
-        padding: '0 16px',
-        height: '58px',
-        boxSizing: 'border-box',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        pointerEvents: 'none',
       }}
     >
-      {/* Top row: nickname + gold + logout */}
-      <div
-        style={{
-          display: 'flex',
-          height: '100%',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
-          <div
-            style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '999px',
-              overflow: 'hidden',
-              border: '1px solid rgba(167,139,250,0.55)',
-              background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            {user.profileImageUrl ? (
-              <img
-                src={user.profileImageUrl}
-                alt={user.nickname}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
-            ) : (
-              <span style={{ fontSize: '12px' }}>⚔️</span>
-            )}
+      {/* Left: Profile card */}
+      <div ref={profileRef} style={{ position: 'relative', pointerEvents: 'auto' }}>
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => setProfileOpen((v) => !v)}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setProfileOpen((v) => !v); } }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: 'rgba(10,10,15,0.92)',
+            borderRadius: '12px',
+            padding: '6px 10px 6px 6px',
+            border: '1px solid rgba(124,58,237,0.2)',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.5)',
+            cursor: 'pointer',
+          }}
+        >
+          {/* Avatar with level badge */}
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <div
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '10px',
+                overflow: 'hidden',
+                border: '2px solid rgba(167,139,250,0.5)',
+                background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {user.profileImageUrl ? (
+                <img
+                  src={user.profileImageUrl}
+                  alt={user.nickname}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              ) : (
+                <span style={{ fontSize: '14px' }}>⚔️</span>
+              )}
+            </div>
+            {/* Level badge - bottom center */}
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '-6px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
+                borderRadius: '8px',
+                padding: '1px 6px',
+                fontSize: '10px',
+                fontWeight: 800,
+                color: '#fff',
+                border: '1px solid rgba(10,10,15,0.8)',
+                whiteSpace: 'nowrap',
+                lineHeight: '14px',
+              }}
+            >
+              {user.level}
+            </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '4px', minWidth: 0, flex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
-              <div
-                style={{
-                  background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
-                  borderRadius: '6px',
-                  padding: '2px 8px',
-                  fontSize: '11px',
-                  fontWeight: 800,
-                  color: '#fff',
-                  letterSpacing: '0.5px',
-                  boxShadow: '0 0 8px rgba(124,58,237,0.4)',
-                  flexShrink: 0,
-                }}
-              >
-                Lv.{user.level}
-              </div>
+
+          {/* Nickname + HP info */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', minWidth: 0 }}>
+            {/* Nickname row with HP text */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span
                 style={{
-                  fontSize: '13px',
+                  fontSize: '12px',
                   fontWeight: 700,
                   color: '#e0d4f7',
-                  textShadow: '0 0 10px rgba(167,139,250,0.3)',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
+                  maxWidth: '80px',
+                  lineHeight: '14px',
                 }}
               >
                 {user.nickname}
               </span>
-              <div
-                style={{
-                  position: 'relative',
-                  width: '80px',
-                  height: '14px',
-                  background: 'rgba(255,255,255,0.08)',
-                  borderRadius: '7px',
-                  overflow: 'hidden',
-                  flexShrink: 0,
-                }}
-              >
-                <div
-                  style={{
-                    width: `${user.maxHp > 0 ? Math.min((user.hp / user.maxHp) * 100, 100) : 0}%`,
-                    height: '100%',
-                    background: 'linear-gradient(90deg, #dc2626, #ef4444)',
-                    borderRadius: '7px',
-                    transition: 'width 0.5s ease',
-                    boxShadow: '0 0 4px rgba(220,38,38,0.5)',
-                  }}
-                />
-                <span
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '8px',
-                    fontWeight: 700,
-                    color: '#fff',
-                    textShadow: '0 0 2px rgba(0,0,0,0.8)',
-                    lineHeight: 1,
-                  }}
-                >
-                  {user.hp} / {user.maxHp}
+              {/* Heart icon + HP text */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0 }}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="#ef4444" stroke="none">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                </svg>
+                <span style={{ fontSize: '10px', fontWeight: 700, color: '#f87171', lineHeight: '12px', whiteSpace: 'nowrap' }}>
+                  {user.hp}/{user.maxHp}
                 </span>
               </div>
             </div>
+            {/* EXP bar */}
             <div
               style={{
                 position: 'relative',
                 width: '100%',
-                height: '12px',
-                background: 'rgba(255,255,255,0.08)',
-                borderRadius: '6px',
+                height: '10px',
+                borderRadius: '5px',
+                background: 'rgba(255,255,255,0.1)',
                 overflow: 'hidden',
               }}
             >
               <div
                 style={{
-                  width: `${expPct}%`,
+                  width: `${expPercent}%`,
                   height: '100%',
-                  background: 'linear-gradient(90deg, #22c55e, #4ade80)',
-                  borderRadius: '6px',
-                  transition: 'width 0.5s ease',
-                  boxShadow: '0 0 4px rgba(34,197,94,0.5)',
+                  borderRadius: '5px',
+                  background: 'linear-gradient(90deg, #2d8a56, #3da06a)',
+                  transition: 'width 0.3s ease',
                 }}
               />
               <span
@@ -294,26 +274,139 @@ export function TopHud() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: '8px',
-                  fontWeight: 700,
+                  fontWeight: 800,
                   color: '#fff',
-                  textShadow: '0 0 2px rgba(0,0,0,0.8)',
+                  textShadow: '0 1px 2px rgba(0,0,0,0.9)',
                   lineHeight: 1,
                 }}
               >
-                {user.exp.toLocaleString()} / {requiredExp.toLocaleString()}
+                {currentExpInLevel.toLocaleString()} / {requiredExpForLevel.toLocaleString()}
               </span>
             </div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginLeft: '10px', flexShrink: 0 }}>
-          <span style={{ fontSize: '13px' }}>💰</span>
-          <span style={{ fontSize: '14px', fontWeight: 800, color: '#fbbf24' }}>
-            {user.gold.toLocaleString()}
-          </span>
-        </div>
+        {/* Profile popup modal */}
+        {profileOpen && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 'calc(100% + 8px)',
+              left: 0,
+              width: '220px',
+              background: 'rgba(10,10,15,0.96)',
+              border: '1px solid rgba(124,58,237,0.3)',
+              borderRadius: '14px',
+              padding: '16px',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+              zIndex: 110,
+            }}
+          >
+            {/* Header: avatar + name */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
+              <div
+                style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '12px',
+                  overflow: 'hidden',
+                  border: '2px solid rgba(167,139,250,0.5)',
+                  background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                {user.profileImageUrl ? (
+                  <img src={user.profileImageUrl} alt={user.nickname} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <span style={{ fontSize: '18px' }}>⚔️</span>
+                )}
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: '14px', fontWeight: 800, color: '#f8fafc', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {user.nickname}
+                </div>
+                <div style={{ fontSize: '12px', color: '#a78bfa', fontWeight: 700 }}>
+                  Lv.{user.level}
+                </div>
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {/* HP */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="#ef4444" stroke="none">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                  </svg>
+                  <span style={{ fontSize: '12px', color: '#94a3b8' }}>HP</span>
+                </div>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#f87171' }}>
+                  {user.hp} / {user.maxHp}
+                </span>
+              </div>
+
+              <div style={{ height: '1px', background: 'rgba(124,58,237,0.15)', margin: '2px 0' }} />
+
+              {/* ATK */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '12px', color: '#94a3b8' }}>⚔️ 공격력</span>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#fbbf24' }}>{user.attack}</span>
+              </div>
+
+              {/* DEF */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '12px', color: '#94a3b8' }}>🛡️ 방어력</span>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#60a5fa' }}>{user.defense}</span>
+              </div>
+
+              <div style={{ height: '1px', background: 'rgba(124,58,237,0.15)', margin: '2px 0' }} />
+
+              {/* EXP */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '12px', color: '#94a3b8' }}>✨ 경험치</span>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#4ade80' }}>{currentExpInLevel.toLocaleString()} / {requiredExpForLevel.toLocaleString()}</span>
+              </div>
+
+              {/* Gold */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '12px', color: '#94a3b8' }}>💰 골드</span>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#fbbf24' }}>{user.gold.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
+      {/* Right: Gold */}
+      <div
+        style={{
+          pointerEvents: 'auto',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
+          background: 'rgba(10,10,15,0.92)',
+          borderRadius: '12px',
+          padding: '8px 12px',
+          border: '1px solid rgba(251,191,36,0.2)',
+          boxShadow: '0 2px 12px rgba(0,0,0,0.5)',
+        }}
+      >
+        <span style={{ fontSize: '14px', lineHeight: 1 }}>💰</span>
+        <span
+          style={{
+            fontSize: '13px',
+            fontWeight: 800,
+            color: '#fbbf24',
+            letterSpacing: '0.3px',
+          }}
+        >
+          {user.gold.toLocaleString()}
+        </span>
+      </div>
     </div>
   );
 }
@@ -345,13 +438,14 @@ export function BottomNav() {
           left: 0,
           right: 0,
           zIndex: 100,
-          background: 'linear-gradient(0deg, rgba(10,10,15,0.98) 0%, rgba(10,10,15,0.95) 100%)',
-          backdropFilter: 'blur(10px)',
-          borderTop: '1px solid rgba(124,58,237,0.15)',
+          background: 'linear-gradient(0deg, rgba(16,16,28,0.99) 0%, rgba(20,18,35,0.97) 100%)',
+          backdropFilter: 'blur(12px)',
+          borderTop: '1px solid rgba(124,58,237,0.3)',
+          boxShadow: '0 -4px 20px rgba(0,0,0,0.5), 0 -1px 8px rgba(124,58,237,0.1)',
           display: 'flex',
           justifyContent: 'space-around',
           alignItems: 'center',
-          padding: '8px 0 calc(8px + env(safe-area-inset-bottom, 0px))',
+          padding: '10px 0 calc(10px + env(safe-area-inset-bottom, 0px))',
         }}
       >
         {navItems.map((item) => {
@@ -373,7 +467,6 @@ export function BottomNav() {
                 transition: 'all 0.2s ease',
               }}
             >
-              {/* Active indicator dot */}
               {isActive && (
                 <div
                   style={{
@@ -396,15 +489,7 @@ export function BottomNav() {
               >
                 <NavIcon type={item.iconType} active={isActive} />
               </div>
-              <span
-                style={{
-                  fontSize: '10px',
-                  fontWeight: isActive ? 700 : 400,
-                  color: isActive ? '#c4b5fd' : '#555',
-                  letterSpacing: '0.5px',
-                  transition: 'color 0.2s ease',
-                }}
-              >
+              <span style={{ fontSize: '10px', fontWeight: isActive ? 700 : 500, color: isActive ? '#c4b5fd' : '#8888a0', letterSpacing: '0.5px' }}>
                 {item.label}
               </span>
             </Link>
@@ -415,11 +500,87 @@ export function BottomNav() {
   );
 }
 
+export function FloatingCodex() {
+  const { isAuthenticated } = useAuth();
+  const { open } = useCodexModal();
+  const pathname = usePathname();
+  const anyModalOpen = useAnyModalOpen();
+
+  const showOn = ['/dashboard'];
+  if (!isAuthenticated || !showOn.includes(pathname) || anyModalOpen) {
+    return null;
+  }
+
+  const size = 48;
+
+  return (
+    <>
+      <style>{`
+        @keyframes codex-float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-3px); }
+        }
+        @keyframes codex-rune-spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes codex-pulse {
+          0%, 100% { box-shadow: 0 0 8px rgba(212,160,23,0.3), 0 4px 12px rgba(0,0,0,0.5), inset 0 0 6px rgba(251,191,36,0.1); }
+          50% { box-shadow: 0 0 18px rgba(212,160,23,0.5), 0 4px 16px rgba(0,0,0,0.6), inset 0 0 10px rgba(251,191,36,0.15); }
+        }
+      `}</style>
+      <button
+        onClick={open}
+        style={{
+          position: 'fixed',
+          top: '72px',
+          right: '12px',
+          zIndex: 99,
+          width: size,
+          height: size,
+          borderRadius: '4px',
+          background: 'linear-gradient(180deg, #1e1830 0%, #13101e 100%)',
+          border: '1.5px solid rgba(212, 160, 23, 0.35)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 0 8px rgba(212,160,23,0.3), 0 4px 12px rgba(0,0,0,0.5), inset 0 0 6px rgba(251,191,36,0.1)',
+          cursor: 'pointer',
+          padding: 0,
+          animation: 'codex-float 4s ease-in-out infinite',
+          overflow: 'visible',
+        }}
+      >
+        {/* Gold corner dots */}
+        <div style={{ position: 'absolute', top: 1, left: 1, width: 3, height: 3, background: '#fbbf24', opacity: 0.4, borderRadius: '50%', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: 1, right: 1, width: 3, height: 3, background: '#fbbf24', opacity: 0.4, borderRadius: '50%', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: 1, left: 1, width: 3, height: 3, background: '#fbbf24', opacity: 0.3, borderRadius: '50%', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: 1, right: 1, width: 3, height: 3, background: '#fbbf24', opacity: 0.3, borderRadius: '50%', pointerEvents: 'none' }} />
+        {/* Icon */}
+        <div style={{ filter: 'drop-shadow(0 0 4px rgba(251,191,36,0.3))' }}>
+          <NavIcon type="codex" active />
+        </div>
+        {/* Top glow line */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: '20%',
+          right: '20%',
+          height: 1,
+          background: 'linear-gradient(90deg, transparent, rgba(167,139,250,0.4), transparent)',
+          pointerEvents: 'none',
+        }} />
+      </button>
+    </>
+  );
+}
+
 // Keep backward compatibility - default export for layout
 export function Nav() {
   return (
     <>
       <TopHud />
+      <FloatingCodex />
       <BottomNav />
     </>
   );

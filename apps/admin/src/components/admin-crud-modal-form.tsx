@@ -29,9 +29,36 @@ export function AdminCrudModalForm({
 }: AdminCrudModalFormProps) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title}>
-      <div style={{ display: 'grid', gap: 14 }}>
-        {children}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          maxHeight: '70dvh',
+          minHeight: 0,
+        }}
+      >
+        <div
+          style={{
+            display: 'grid',
+            gap: 14,
+            overflowY: 'auto',
+            minHeight: 0,
+            paddingRight: 4,
+          }}
+        >
+          {children}
+        </div>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: 8,
+            marginTop: 12,
+            paddingTop: 10,
+            borderTop: '1px solid rgba(255,255,255,0.08)',
+            flexShrink: 0,
+          }}
+        >
           <Button variant="ghost" onClick={onClose}>취소</Button>
           <Button loading={loading} onClick={onSubmit}>{submitLabel}</Button>
         </div>

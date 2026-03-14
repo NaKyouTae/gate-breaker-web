@@ -2,7 +2,9 @@
 export type Role = 'USER' | 'ADMIN';
 export type ItemType = 'WEAPON' | 'ARMOR' | 'GLOVE' | 'SHOE' | 'RING' | 'NECKLACE' | 'MATERIAL' | 'CONSUMABLE';
 export type ItemRarity = 'COMMON' | 'RARE' | 'EPIC' | 'LEGENDARY' | 'MYTHIC';
-export type EquipSlot = 'WEAPON' | 'ARMOR' | 'GLOVE' | 'SHOE' | 'RING' | 'NECKLACE';
+export type EquipSlot = 'WEAPON';
+/** @deprecated 무기 슬롯만 사용 */
+export type LegacyEquipSlot = 'WEAPON' | 'ARMOR' | 'GLOVE' | 'SHOE' | 'RING' | 'NECKLACE';
 export type BattleResult = 'VICTORY' | 'DEFEAT' | 'ESCAPE';
 export type ChannelStatus = 'WAITING' | 'IN_DUNGEON';
 export type ChannelMemberRole = 'HOST' | 'MEMBER';

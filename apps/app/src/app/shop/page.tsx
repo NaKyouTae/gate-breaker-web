@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { shop, user as userApi } from '@gate-breaker/api-client';
-import { Card, Button, Modal, Spinner, useToast, Input } from '@gate-breaker/ui';
+import { Button, Modal, Spinner, useToast, Input } from '@gate-breaker/ui';
 import { useAuth } from '@/context/auth-context';
 import type { ShopItem, ItemType, ItemRarity } from '@gate-breaker/types';
 
@@ -26,13 +26,13 @@ const TYPE_LABELS: Record<ItemType, string> = {
   CONSUMABLE: '소모품',
 };
 
-type ShopCategory = 'ALL' | '장비' | '소비' | '기타';
-const SHOP_CATEGORIES: ShopCategory[] = ['ALL', '장비', '소비', '기타'];
+type ShopCategory = 'ALL' | '무기' | '소비' | '기타';
+const SHOP_CATEGORIES: ShopCategory[] = ['ALL', '무기', '소비', '기타'];
 
 function getItemCategory(item: Pick<ShopItem, 'type'>): Exclude<ShopCategory, 'ALL'> {
   if (item.type === 'CONSUMABLE') return '소비';
   if (item.type === 'MATERIAL') return '기타';
-  return '장비';
+  return '무기';
 }
 
 export default function ShopPage() {
@@ -109,7 +109,7 @@ export default function ShopPage() {
   }
 
   return (
-    <div style={{ maxWidth: '480px', margin: '0 auto', padding: '16px' }}>
+    <div style={{ maxWidth: '480px', margin: '0 auto', display: 'flex', flexDirection: 'column', height: 'calc(100dvh - 128px - env(safe-area-inset-bottom, 0px))' }}>
       {items.length > 0 && (
         <div
           style={{
@@ -117,8 +117,8 @@ export default function ShopPage() {
             gap: '8px',
             overflowX: 'auto',
             whiteSpace: 'nowrap',
-            paddingBottom: '8px',
-            marginBottom: '18px',
+            padding: '16px 16px 8px',
+            flexShrink: 0,
           }}
         >
           {SHOP_CATEGORIES.map((category) => {
@@ -126,18 +126,8 @@ export default function ShopPage() {
             return (
               <button
                 key={category}
+                className={`category-pill${isActive ? ' active' : ''}`}
                 onClick={() => setSelectedCategory(category)}
-                style={{
-                  padding: '8px 14px',
-                  borderRadius: '999px',
-                  border: isActive ? '1px solid #fbbf24' : '1px solid #2a2a4a',
-                  background: isActive ? 'rgba(251, 191, 36, 0.15)' : '#12122a',
-                  color: isActive ? '#fbbf24' : '#b6b6c7',
-                  fontSize: '0.85rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  flexShrink: 0,
-                }}
               >
                 {category === 'ALL' ? '전체' : category}
               </button>
@@ -146,6 +136,7 @@ export default function ShopPage() {
         </div>
       )}
 
+      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px 16px' }}>
       {filteredItems.length === 0 ? (
         <div style={{ color: '#555', padding: '60px 0', textAlign: 'center' }}>
           선택한 카테고리에 판매 중인 아이템이 없습니다.
@@ -160,62 +151,33 @@ export default function ShopPage() {
         >
           {filteredItems.map((item) => {
             return (
-              <Card
+              <div
                 key={item.id}
-                style={{ padding: '0', cursor: 'pointer', background: 'transparent', border: 'none', boxShadow: 'none' }}
                 onClick={() => openBuyModal(item)}
+                style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
               >
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <div
-                    style={{
-                      width: '100%',
-                      aspectRatio: '1 / 1',
-                      borderRadius: '16px',
-                      border: '1px solid #2f2f47',
-                      overflow: 'hidden',
-                      background: '#111233',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: '#6b7280',
-                      fontSize: '12px',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {item.imageUrl ? (
-                      <img
-                        src={item.imageUrl}
-                        alt={item.name}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      />
-                    ) : (
-                      'NO IMG'
-                    )}
-                  </div>
-                  <div style={{ width: '100%', paddingTop: '8px', textAlign: 'center' }}>
-                    <div
-                      style={{
-                        fontSize: '0.95rem',
-                        fontWeight: 700,
-                        color: RARITY_COLORS[item.rarity],
-                        marginBottom: '4px',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {item.name}
-                    </div>
-                    <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#fbbf24' }}>
-                      {item.buyPrice.toLocaleString()} G
-                    </span>
-                  </div>
+                <div
+                  className="item-box"
+                  style={{ borderColor: `${RARITY_COLORS[item.rarity]}25` }}
+                >
+                  {item.imageUrl ? (
+                    <img src={item.imageUrl} alt={item.name} />
+                  ) : (
+                    'NO IMG'
+                  )}
                 </div>
-              </Card>
+                <div className="item-name" style={{ color: RARITY_COLORS[item.rarity] }}>
+                  {item.name}
+                </div>
+                <div className="item-price">
+                  {item.buyPrice.toLocaleString()} G
+                </div>
+              </div>
             );
           })}
         </div>
       )}
+      </div>
 
       {/* Item Detail Modal */}
       <Modal
@@ -227,27 +189,17 @@ export default function ShopPage() {
           <div>
             <div style={{ marginBottom: '20px' }}>
               <div
+                className="item-box"
                 style={{
                   width: 92,
                   height: 92,
-                  borderRadius: '10px',
-                  border: '1px solid #2f2f47',
-                  overflow: 'hidden',
-                  background: '#0f1020',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#6b7280',
-                  fontSize: '12px',
+                  aspectRatio: 'unset',
+                  borderColor: `${RARITY_COLORS[selectedItem.rarity]}30`,
                   marginBottom: '12px',
                 }}
               >
                 {selectedItem.imageUrl ? (
-                  <img
-                    src={selectedItem.imageUrl}
-                    alt={selectedItem.name}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  />
+                  <img src={selectedItem.imageUrl} alt={selectedItem.name} />
                 ) : (
                   'NO IMG'
                 )}
@@ -291,20 +243,9 @@ export default function ShopPage() {
                     style={{ width: '90px', textAlign: 'center' }}
                   />
                   <button
+                    className="icon-btn"
                     onClick={() => setQuantity((q) => q + 1)}
-                    style={{
-                      width: '36px',
-                      height: '36px',
-                      background: '#0e0e1a',
-                      border: '1px solid #333',
-                      borderRadius: '6px',
-                      color: '#eee',
-                      fontSize: '1.2rem',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
+                    style={{ width: '36px', height: '36px', fontSize: '1.2rem' }}
                   >
                     +
                   </button>

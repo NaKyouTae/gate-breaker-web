@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from 'next';
 import { ToastProvider } from '@gate-breaker/ui';
 import { AuthProvider } from '@/context/auth-context';
+import { CodexModalProvider } from '@/context/codex-modal-context';
 import { Nav } from '@/components/nav';
+import { CodexModal } from '@/components/codex-modal';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -28,12 +30,14 @@ export default function RootLayout({
         <div className="mobile-shell">
           <AuthProvider>
             <ToastProvider>
+              <CodexModalProvider>
               <Nav />
+              <CodexModal />
               <div id="fullscreen-portal" style={{ position: 'relative', zIndex: 200 }} />
               <div className="mobile-shell-inner">
                 <main
                   style={{
-                    paddingTop: '58px',
+                    paddingTop: '64px',
                     paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))',
                     minHeight: '100%',
                   }}
@@ -41,6 +45,7 @@ export default function RootLayout({
                   {children}
                 </main>
               </div>
+            </CodexModalProvider>
             </ToastProvider>
           </AuthProvider>
         </div>

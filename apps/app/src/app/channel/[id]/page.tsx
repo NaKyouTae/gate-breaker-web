@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { channel } from '@gate-breaker/api-client';
-import type { Channel, ChatMessage, Dungeon } from '@gate-breaker/types';
+import type { Channel, ChatMessage } from '@gate-breaker/types';
 import { Badge, Button, Input, Modal, Spinner, useToast } from '@gate-breaker/ui';
 import { useAuth } from '@/context/auth-context';
 import { useSocket } from '@/hooks/use-socket';
@@ -34,7 +34,6 @@ type ChatEntry =
 
 const SLASH_COMMANDS = [
   { command: '/강화', description: '장비 강화 시도' },
-  { command: '/던전입장', description: '던전 초대 생성' },
 ];
 
 const RARITY_COLORS: Record<string, string> = {
@@ -96,11 +95,6 @@ export default function ChannelDetailPage() {
   const [pendingEnhanceEntries, setPendingEnhanceEntries] = useState<
     (SystemMessage & { kind: 'system' })[]
   >([]);
-
-  // Dungeon state
-  const [dungeonPickerOpen, setDungeonPickerOpen] = useState(false);
-  const [dungeons, setDungeons] = useState<Dungeon[]>([]);
-  const [dungeonLoading, setDungeonLoading] = useState(false);
 
   const refreshPageData = useCallback(async () => {
     try {
@@ -272,12 +266,6 @@ export default function ChannelDetailPage() {
       openEnhancePicker();
       return;
     }
-    if (value === '/던전입장') {
-      setMessage('');
-      openDungeonPicker();
-      return;
-    }
-
     setSending(true);
     try {
       const socket = socketRef.current;
@@ -299,9 +287,6 @@ export default function ChannelDetailPage() {
     if (cmd === '/강화') {
       setMessage('');
       openEnhancePicker();
-    } else if (cmd === '/던전입장') {
-      setMessage('');
-      openDungeonPicker();
     }
   };
 
@@ -341,33 +326,6 @@ export default function ChannelDetailPage() {
       return rest;
     });
     refreshUser();
-  };
-
-  // ── Dungeon ──
-  const openDungeonPicker = () => {
-    const socket = socketRef.current;
-    if (!socket?.connected) {
-      addToast('소켓 연결이 불안정합니다.', 'warning');
-      return;
-    }
-
-    setDungeonLoading(true);
-    setDungeonPickerOpen(true);
-
-    const onList = (list: Dungeon[]) => {
-      setDungeons(list);
-      setDungeonLoading(false);
-    };
-    socket.once('channel:dungeon-list', onList);
-    socket.emit('channel:dungeon-list');
-  };
-
-  const handleSelectDungeon = (dungeonId: string) => {
-    const socket = socketRef.current;
-    if (!socket?.connected) return;
-
-    setDungeonPickerOpen(false);
-    socket.emit('channel:dungeon-invite', { channelId, dungeonId });
   };
 
   const handleLeave = async () => {
@@ -842,57 +800,6 @@ export default function ChannelDetailPage() {
         </div>
       </Modal>
 
-      {/* Dungeon picker modal */}
-      <Modal isOpen={dungeonPickerOpen} onClose={() => setDungeonPickerOpen(false)} title="던전 선택">
-        {dungeonLoading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '30px 0' }}><Spinner /></div>
-        ) : dungeons.length === 0 ? (
-          <div style={{ color: '#666', textAlign: 'center', padding: '30px 0' }}>입장 가능한 던전이 없습니다.</div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {dungeons.map((d) => {
-              const canEnter = user && user.level >= d.minLevel && user.level <= d.maxLevel;
-              return (
-                <button
-                  key={d.id}
-                  onClick={() => canEnter && handleSelectDungeon(d.id)}
-                  disabled={!canEnter}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '12px 14px',
-                    background: '#0f0f17',
-                    borderRadius: 10,
-                    border: '1px solid #2a2a4a',
-                    cursor: canEnter ? 'pointer' : 'not-allowed',
-                    opacity: canEnter ? 1 : 0.4,
-                    color: '#eee',
-                    textAlign: 'left',
-                    transition: 'border-color 0.15s',
-                  }}
-                  onMouseEnter={(e) => { if (canEnter) (e.currentTarget as HTMLElement).style.borderColor = '#7c3aed'; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = '#2a2a4a'; }}
-                >
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 600 }}>{d.name}</div>
-                    <div style={{ display: 'flex', gap: 8, marginTop: 3, fontSize: 12, color: '#888' }}>
-                      <span>Lv.{d.minLevel}~{d.maxLevel}</span>
-                      <span style={{ color: '#fbbf24' }}>{d.rewardGoldMin.toLocaleString()}~{d.rewardGoldMax.toLocaleString()}G</span>
-                      <span style={{ color: '#2ecc71' }}>EXP {d.rewardExp}</span>
-                    </div>
-                  </div>
-                  {canEnter && (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M9 18l6-6-6-6" />
-                    </svg>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </Modal>
     </div>
   );
 }

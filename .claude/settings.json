@@ -47,7 +47,13 @@
       "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web -type f -name *battle* -o -name *api*)",
       "Bash(grep -E \"\\\\.\\(ts|tsx|js|jsx\\)$\")",
       "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/app/src -type f -name *.ts -o -name *.tsx -o -name *.css -o -name *.module.css)",
-      "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/admin/src -type f -name *.ts -o -name *.tsx -o -name *.css -o -name *.module.css)"
+      "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/admin/src -type f -name *.ts -o -name *.tsx -o -name *.css -o -name *.module.css)",
+      "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/packages -type f -name *.ts -o -name *.tsx)",
+      "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-server -maxdepth 3 -type f \\\\\\(-name *.sh -o -name start* -o -name entrypoint* \\\\\\))",
+      "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-server/src -name *bootstrap* -o -name *main*)",
+      "Bash(wc -l /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/app/src/app/channel/[id]/page.tsx)",
+      "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/app/src -type f \\\\\\(-name *profile* -o -name *modal* -o -name *header* \\\\\\))",
+      "Bash(wc -l apps/app/src/app/channel/\\\\[id\\\\]/page.tsx)"
     ],
     "additionalDirectories": [
       "/Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/admin/.next",
