@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import type { FormEvent, ReactNode } from 'react';
 import { Button, Modal } from '@gate-breaker/ui';
 
 type AdminCrudModalFormProps = {
@@ -27,9 +27,17 @@ export function AdminCrudModalForm({
   onSubmit,
   children,
 }: AdminCrudModalFormProps) {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!loading) {
+      onSubmit();
+    }
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title}>
-      <div
+      <form
+        onSubmit={handleSubmit}
         style={{
           display: 'flex',
           flexDirection: 'column',
@@ -59,10 +67,10 @@ export function AdminCrudModalForm({
             flexShrink: 0,
           }}
         >
-          <Button variant="ghost" onClick={onClose}>취소</Button>
-          <Button loading={loading} onClick={onSubmit}>{submitLabel}</Button>
+          <Button type="button" variant="ghost" onClick={onClose}>취소</Button>
+          <Button type="submit" loading={loading}>{submitLabel}</Button>
         </div>
-      </div>
+      </form>
     </Modal>
   );
 }
