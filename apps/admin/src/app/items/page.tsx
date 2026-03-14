@@ -260,7 +260,7 @@ export default function ItemsPage() {
       <AdminFormField label="카테고리">
         <Input value={form.category} onChange={(e) => setter((p) => ({ ...p, category: e.target.value }))} />
       </AdminFormField>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
         <AdminFormField label="타입">
           <select value={form.type} onChange={(e) => setter((p) => ({ ...p, type: e.target.value as ItemType }))} style={selectStyle}>
             {TYPES.map((t) => <option key={t} value={t}>{TYPE_LABELS[t]}</option>)}
@@ -272,7 +272,7 @@ export default function ItemsPage() {
           </select>
         </AdminFormField>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
         <AdminFormField label="공격력">
           <Input type="number" value={String(form.baseAttack)} onChange={(e) => changeNum(setter, 'baseAttack', e.target.value)} />
         </AdminFormField>
@@ -337,108 +337,127 @@ export default function ItemsPage() {
             </div>
           </div>
 
-          <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: '#1a1a2e', borderRadius: 8, overflow: 'hidden' }}>
-            <thead style={{ backgroundColor: '#16213e' }}>
-              <tr>
-                <th style={thStyle}>이미지</th>
-                <th style={thStyle}>이름</th>
-                <th style={thStyle}>카테고리</th>
-                <th style={thStyle}>타입</th>
-                <th style={thStyle}>등급</th>
-                <th style={thStyle}>공격</th>
-                <th style={thStyle}>방어</th>
-                <th style={thStyle}>HP</th>
-                <th style={thStyle}>판매가</th>
-                <th style={thStyle}>구매가</th>
-                <th style={thStyle}>액션</th>
-              </tr>
-            </thead>
-            <tbody>
+          {filteredRows.length === 0 ? (
+            <p style={{ textAlign: 'center', color: '#888', padding: '60px 0' }}>조건에 맞는 아이템이 없습니다.</p>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
               {filteredRows.map((row) => {
                 const isUploading = uploadingId === row.id;
 
                 return (
-                  <tr
+                  <div
                     key={row.id}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLTableRowElement).style.backgroundColor = '#252545'; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLTableRowElement).style.backgroundColor = 'transparent'; }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = '#252545'; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.backgroundColor = '#1a1a2e'; }}
+                    style={{
+                      backgroundColor: '#1a1a2e',
+                      borderRadius: 12,
+                      border: '1px solid #2a2a4a',
+                      padding: '16px 20px',
+                      transition: 'background-color 0.15s',
+                    }}
                   >
-                    <td style={tdStyle}>
-                      {isUploading ? (
-                        <Spinner />
-                      ) : row.imageUrl ? (
-                        <div style={{ position: 'relative', display: 'inline-block', width: 40, height: 40 }}>
-                          <img
-                            src={row.imageUrl}
-                            alt={row.name}
-                            style={{ width: 40, height: 40, borderRadius: 6, objectFit: 'cover' }}
-                          />
-                          <button
-                            onClick={() => handleImageDelete(row.id)}
-                            style={{
-                              position: 'absolute',
-                              top: -6,
-                              right: -6,
-                              width: 18,
-                              height: 18,
-                              borderRadius: '50%',
-                              backgroundColor: '#e74c3c',
-                              color: '#fff',
-                              border: 'none',
-                              fontSize: 11,
-                              lineHeight: '18px',
-                              textAlign: 'center',
-                              cursor: 'pointer',
-                              padding: 0,
-                            }}
-                          >
-                            X
-                          </button>
-                        </div>
-                      ) : (
-                        <label style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: 6, backgroundColor: '#252545', border: '1px dashed #555', cursor: 'pointer', fontSize: 18, color: '#666' }}>
-                          +
-                          <input
-                            type="file"
-                            accept="image/*"
-                            style={{ display: 'none' }}
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) handleImageUpload(row.id, file);
-                            }}
-                          />
-                        </label>
-                      )}
-                    </td>
-                    <td style={tdStyle}>{row.name}</td>
-                    <td style={tdStyle}>{getCategoryLabel(row)}</td>
-                    <td style={tdStyle}>{TYPE_LABELS[row.type]}</td>
-                    <td style={tdStyle}>
-                      <span style={{ color: RARITY_COLORS[row.rarity], fontWeight: 600 }}>{RARITY_LABELS[row.rarity]}</span>
-                    </td>
-                    <td style={tdStyle}>{row.baseAttack}</td>
-                    <td style={tdStyle}>{row.baseDefense}</td>
-                    <td style={tdStyle}>{row.baseHp}</td>
-                    <td style={tdStyle}>{row.sellPrice}</td>
-                    <td style={tdStyle}>{row.buyPrice}</td>
-                    <td style={tdStyle}>
-                      <div style={{ display: 'flex', gap: 6 }}>
+                    {/* 헤더: 이미지 + 이름 + 액션 */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                      <div style={{ position: 'relative', flexShrink: 0, width: 56, height: 56 }}>
+                        {isUploading ? (
+                          <div style={{ width: 56, height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#2a2a4a', borderRadius: 8 }}>
+                            <Spinner />
+                          </div>
+                        ) : row.imageUrl ? (
+                          <div style={{ position: 'relative', width: 56, height: 56 }}>
+                            <img
+                              src={row.imageUrl}
+                              alt={row.name}
+                              style={{ width: 56, height: 56, borderRadius: 8, objectFit: 'cover' }}
+                            />
+                            <button
+                              onClick={() => handleImageDelete(row.id)}
+                              style={{
+                                position: 'absolute',
+                                top: -4,
+                                right: -4,
+                                width: 18,
+                                height: 18,
+                                borderRadius: '50%',
+                                backgroundColor: '#e74c3c',
+                                color: '#fff',
+                                border: 'none',
+                                fontSize: 10,
+                                lineHeight: '18px',
+                                textAlign: 'center',
+                                cursor: 'pointer',
+                                padding: 0,
+                              }}
+                            >
+                              X
+                            </button>
+                          </div>
+                        ) : (
+                          <label style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: 56,
+                            height: 56,
+                            borderRadius: 8,
+                            backgroundColor: '#252545',
+                            border: '1px dashed #555',
+                            cursor: 'pointer',
+                            fontSize: 22,
+                            color: '#666',
+                          }}>
+                            +
+                            <input
+                              type="file"
+                              accept="image/*"
+                              style={{ display: 'none' }}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleImageUpload(row.id, file);
+                              }}
+                            />
+                          </label>
+                        )}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: 15, fontWeight: 700, color: '#eee', marginBottom: 2 }}>{row.name}</p>
+                        <p style={{ fontSize: 12, color: getCategoryLabel(row) ? '#888' : '#555' }}>{getCategoryLabel(row)}</p>
+                      </div>
+                      <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                         <AdminActionIconButton kind="edit" onClick={() => openEditModal(row)} />
                         <AdminActionIconButton kind="delete" onClick={() => remove(row.id)} />
                       </div>
-                    </td>
-                  </tr>
+                    </div>
+                    {/* 타입 + 등급 태그 */}
+                    <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+                      <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, backgroundColor: '#12122a', color: '#aaa' }}>
+                        {TYPE_LABELS[row.type]}
+                      </span>
+                      <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, backgroundColor: '#12122a', color: RARITY_COLORS[row.rarity], fontWeight: 600 }}>
+                        {RARITY_LABELS[row.rarity]}
+                      </span>
+                    </div>
+                    {/* 스탯 그리드 */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6 }}>
+                      {[
+                        { label: '공격', value: row.baseAttack, color: '#f97316' },
+                        { label: '방어', value: row.baseDefense, color: '#3b82f6' },
+                        { label: 'HP', value: row.baseHp, color: '#ef4444' },
+                        { label: '판매가', value: row.sellPrice, color: '#fbbf24' },
+                        { label: '구매가', value: row.buyPrice, color: '#a78bfa' },
+                      ].map(({ label, value, color }) => (
+                        <div key={label} style={{ backgroundColor: '#12122a', borderRadius: 6, padding: '6px 4px', textAlign: 'center' }}>
+                          <p style={{ fontSize: 10, color: '#888', marginBottom: 2 }}>{label}</p>
+                          <p style={{ fontSize: 11, fontWeight: 700, color }}>{value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 );
               })}
-              {filteredRows.length === 0 && (
-                <tr>
-                  <td colSpan={11} style={{ ...tdStyle, textAlign: 'center', color: '#777' }}>
-                    조건에 맞는 아이템이 없습니다.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+            </div>
+          )}
         </div>
       )}
 

@@ -99,46 +99,47 @@ export default function ShopPage() {
 
       {loading ? (
         <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}><Spinner /></div>
+      ) : items.length === 0 ? (
+        <p style={{ textAlign: 'center', color: '#888', padding: '60px 0' }}>상점 등록 아이템이 없습니다.</p>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: '#1a1a2e', borderRadius: 8, overflow: 'hidden' }}>
-          <thead style={{ backgroundColor: '#16213e' }}>
-            <tr>
-              <th style={thStyle}>아이템</th>
-              <th style={thStyle}>카테고리</th>
-              <th style={thStyle}>타입</th>
-              <th style={thStyle}>등급</th>
-              <th style={thStyle}>현재 가격</th>
-              <th style={thStyle}>액션</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.length === 0 ? (
-              <tr>
-                <td colSpan={6} style={{ ...tdStyle, padding: '60px 16px', color: '#666', textAlign: 'center' }}>
-                  상점 등록 아이템이 없습니다.
-                </td>
-              </tr>
-            ) : (
-              items.map((item) => (
-                <tr
-                  key={item.id}
-                  style={{ backgroundColor: hoveredRow === item.id ? '#252545' : 'transparent' }}
-                  onMouseEnter={() => setHoveredRow(item.id)}
-                  onMouseLeave={() => setHoveredRow(null)}
-                >
-                  <td style={tdStyle}>{item.name}</td>
-                  <td style={tdStyle}>{item.category}</td>
-                  <td style={tdStyle}>{TYPE_LABELS[item.type]}</td>
-                  <td style={tdStyle}>{RARITY_LABELS[item.rarity]}</td>
-                  <td style={tdStyle}>{(item.buyPrice || 0).toLocaleString()} G</td>
-                  <td style={tdStyle}>
-                    <AdminActionIconButton kind="edit" onClick={() => openEditModal(item)} />
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
+          {items.map((item) => (
+            <div
+              key={item.id}
+              onMouseEnter={() => setHoveredRow(item.id)}
+              onMouseLeave={() => setHoveredRow(null)}
+              style={{
+                backgroundColor: hoveredRow === item.id ? '#252545' : '#1a1a2e',
+                borderRadius: 12,
+                border: '1px solid #2a2a4a',
+                padding: '16px 20px',
+                transition: 'background-color 0.15s',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+                <p style={{ fontSize: 15, fontWeight: 700, color: '#eee' }}>{item.name}</p>
+                <AdminActionIconButton kind="edit" onClick={() => openEditModal(item)} />
+              </div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+                <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, backgroundColor: '#12122a', color: '#aaa' }}>
+                  {item.category}
+                </span>
+                <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, backgroundColor: '#12122a', color: '#aaa' }}>
+                  {TYPE_LABELS[item.type]}
+                </span>
+                <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, backgroundColor: '#12122a', color: '#a78bfa' }}>
+                  {RARITY_LABELS[item.rarity]}
+                </span>
+              </div>
+              <div style={{ backgroundColor: '#12122a', borderRadius: 8, padding: '8px 12px' }}>
+                <p style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>현재 가격</p>
+                <p style={{ fontSize: 16, fontWeight: 700, color: '#fbbf24' }}>
+                  {(item.buyPrice || 0).toLocaleString()} G
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
       <AdminCrudModalForm

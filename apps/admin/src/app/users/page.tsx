@@ -115,77 +115,65 @@ export default function UsersPage() {
 
       {!loading && !error && data && (
         <>
-          <div style={{ overflowX: 'auto' }}>
-            <table
-              style={{
-                width: '100%',
-                borderCollapse: 'collapse',
-                backgroundColor: '#1a1a2e',
-                borderRadius: 8,
-                overflow: 'hidden',
-              }}
-            >
-              <thead style={{ backgroundColor: '#16213e' }}>
-                <tr>
-                  <th style={tableHeaderStyle}>ID</th>
-                  <th style={tableHeaderStyle}>닉네임</th>
-                  <th style={tableHeaderStyle}>이메일</th>
-                  <th style={tableHeaderStyle}>레벨</th>
-                  <th style={tableHeaderStyle}>골드</th>
-                  <th style={tableHeaderStyle}>역할</th>
-                  <th style={tableHeaderStyle}>가입일</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.data.map((user) => (
-                  <tr
-                    key={user.id}
-                    onClick={() => router.push(`/users/${user.id}`)}
-                    style={{ cursor: 'pointer', transition: 'background-color 0.15s' }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLTableRowElement).style.backgroundColor = '#252545';
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLTableRowElement).style.backgroundColor = 'transparent';
-                    }}
-                  >
-                    <td style={{ ...tableCellStyle, fontFamily: 'monospace', fontSize: 12 }}>
-                      {user.id.slice(0, 8)}...
-                    </td>
-                    <td style={tableCellStyle}>{user.nickname}</td>
-                    <td style={{ ...tableCellStyle, color: '#aaa' }}>{user.email}</td>
-                    <td style={tableCellStyle}>{user.level}</td>
-                    <td style={tableCellStyle}>{user.gold.toLocaleString()}</td>
-                    <td style={tableCellStyle}>
-                      <span
-                        style={{
-                          display: 'inline-block',
-                          padding: '2px 8px',
-                          borderRadius: 4,
-                          fontSize: 12,
-                          fontWeight: 600,
-                          backgroundColor: user.role === 'ADMIN' ? '#6c5ce730' : '#2a2a4a',
-                          color: user.role === 'ADMIN' ? '#6c5ce7' : '#aaa',
-                        }}
-                      >
-                        {ROLE_LABELS[user.role]}
-                      </span>
-                    </td>
-                    <td style={{ ...tableCellStyle, color: '#aaa', fontSize: 13 }}>
-                      {new Date(user.createdAt).toLocaleDateString('ko-KR')}
-                    </td>
-                  </tr>
-                ))}
-                {data.data.length === 0 && (
-                  <tr>
-                    <td colSpan={7} style={{ ...tableCellStyle, textAlign: 'center', color: '#888', padding: 32 }}>
-                      검색 결과가 없습니다.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          {data.data.length === 0 ? (
+            <p style={{ textAlign: 'center', color: '#888', padding: '60px 0' }}>검색 결과가 없습니다.</p>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+              {data.data.map((user) => (
+                <div
+                  key={user.id}
+                  onClick={() => router.push(`/users/${user.id}`)}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLDivElement).style.backgroundColor = '#252545';
+                    (e.currentTarget as HTMLDivElement).style.borderColor = '#6c5ce740';
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLDivElement).style.backgroundColor = '#1a1a2e';
+                    (e.currentTarget as HTMLDivElement).style.borderColor = '#2a2a4a';
+                  }}
+                  style={{
+                    backgroundColor: '#1a1a2e',
+                    borderRadius: 12,
+                    border: '1px solid #2a2a4a',
+                    padding: '16px 20px',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.15s, border-color 0.15s',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+                    <div>
+                      <p style={{ fontSize: 15, fontWeight: 700, color: '#eee' }}>{user.nickname}</p>
+                      <p style={{ fontSize: 12, color: '#888', marginTop: 2 }}>{user.email}</p>
+                    </div>
+                    <span
+                      style={{
+                        padding: '2px 8px',
+                        borderRadius: 4,
+                        fontSize: 11,
+                        fontWeight: 600,
+                        backgroundColor: user.role === 'ADMIN' ? '#6c5ce730' : '#2a2a4a',
+                        color: user.role === 'ADMIN' ? '#6c5ce7' : '#aaa',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {ROLE_LABELS[user.role]}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 16, marginBottom: 8 }}>
+                    <div style={{ backgroundColor: '#12122a', borderRadius: 8, padding: '6px 12px', flex: 1 }}>
+                      <p style={{ fontSize: 11, color: '#888', marginBottom: 1 }}>레벨</p>
+                      <p style={{ fontSize: 14, fontWeight: 700, color: '#eee' }}>{user.level}</p>
+                    </div>
+                    <div style={{ backgroundColor: '#12122a', borderRadius: 8, padding: '6px 12px', flex: 1 }}>
+                      <p style={{ fontSize: 11, color: '#888', marginBottom: 1 }}>골드</p>
+                      <p style={{ fontSize: 14, fontWeight: 700, color: '#fbbf24' }}>{user.gold.toLocaleString()}</p>
+                    </div>
+                  </div>
+                  <p style={{ fontSize: 11, color: '#555' }}>가입: {new Date(user.createdAt).toLocaleDateString('ko-KR')}</p>
+                </div>
+              ))}
+            </div>
+          )}
 
           <div
             style={{

@@ -8,6 +8,12 @@ export const metadata: Metadata = {
   description: 'Gate Breaker 관리자 대시보드',
 };
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+};
+
 export default function RootLayout({
   children,
 }: {

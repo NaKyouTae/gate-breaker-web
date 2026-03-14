@@ -207,62 +207,45 @@ export default function DropTablesPage() {
 
       {loading ? (
         <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}><Spinner /></div>
+      ) : rows.length === 0 ? (
+        <p style={{ textAlign: 'center', color: '#888', padding: '60px 0' }}>드롭 테이블이 없습니다.</p>
       ) : (
-        <table
-          style={{
-            width: '100%',
-            borderCollapse: 'collapse',
-            backgroundColor: '#1a1a2e',
-            borderRadius: 8,
-            overflow: 'hidden',
-          }}
-        >
-          <thead style={{ backgroundColor: '#16213e' }}>
-            <tr>
-              <th style={thStyle}>몬스터</th>
-              <th style={thStyle}>아이템</th>
-              <th style={thStyle}>드롭 확률</th>
-              <th style={thStyle}>액션</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={4}
-                  style={{ ...tdStyle, color: '#666', textAlign: 'center' }}
-                >
-                  드롭 테이블이 없습니다.
-                </td>
-              </tr>
-            ) : (
-              rows.map((row) => (
-                <tr
-                  key={row.id}
-                  onMouseEnter={() => setHoveredRow(row.id)}
-                  onMouseLeave={() => setHoveredRow(null)}
-                  style={{ backgroundColor: hoveredRow === row.id ? '#252545' : 'transparent' }}
-                >
-                  <td style={tdStyle}>
-                    {row.monster?.name || row.monsterId}
-                  </td>
-                  <td style={tdStyle}>
-                    {row.item?.name || row.itemId}
-                  </td>
-                  <td style={tdStyle}>
-                    {row.dropRate}
-                  </td>
-                  <td style={tdStyle}>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <AdminActionIconButton kind="edit" onClick={() => openEditModal(row)} />
-                      <AdminActionIconButton kind="delete" onClick={() => remove(row.id)} />
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
+          {rows.map((row) => (
+            <div
+              key={row.id}
+              onMouseEnter={() => setHoveredRow(row.id)}
+              onMouseLeave={() => setHoveredRow(null)}
+              style={{
+                backgroundColor: hoveredRow === row.id ? '#252545' : '#1a1a2e',
+                borderRadius: 12,
+                border: '1px solid #2a2a4a',
+                padding: '16px 20px',
+                transition: 'background-color 0.15s',
+              }}
+            >
+              <div style={{ marginBottom: 10 }}>
+                <p style={{ fontSize: 13, color: '#aaa', marginBottom: 4 }}>
+                  <span style={{ color: '#eee', fontWeight: 600 }}>{row.monster?.name || row.monsterId}</span>
+                  <span style={{ margin: '0 8px', color: '#555' }}>→</span>
+                  <span style={{ color: '#a78bfa', fontWeight: 600 }}>{row.item?.name || row.itemId}</span>
+                </p>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ backgroundColor: '#12122a', borderRadius: 8, padding: '6px 14px' }}>
+                  <p style={{ fontSize: 11, color: '#888', marginBottom: 1 }}>드롭 확률</p>
+                  <p style={{ fontSize: 15, fontWeight: 700, color: '#6c5ce7' }}>
+                    {(row.dropRate * 100).toFixed(1)}%
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <AdminActionIconButton kind="edit" onClick={() => openEditModal(row)} />
+                  <AdminActionIconButton kind="delete" onClick={() => remove(row.id)} />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
       <AdminCrudModalForm

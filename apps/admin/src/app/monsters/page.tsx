@@ -220,7 +220,7 @@ export default function MonstersPage() {
           ))}
         </select>
       </AdminFormField>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
         <AdminFormField label="HP">
           <Input type="number" value={String(form.hp)} onChange={(e) => changeNum(setter, 'hp', e.target.value)} />
         </AdminFormField>
@@ -250,132 +250,137 @@ export default function MonstersPage() {
 
       {loading ? (
         <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}><Spinner /></div>
+      ) : rows.length === 0 ? (
+        <p style={{ textAlign: 'center', color: '#888', padding: '60px 0' }}>몬스터가 없습니다.</p>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: '#1a1a2e', borderRadius: 8, overflow: 'hidden' }}>
-          <thead style={{ backgroundColor: '#16213e' }}>
-            <tr>
-              <th style={thStyle}>이미지</th>
-              <th style={thStyle}>이름</th>
-              <th style={thStyle}>던전</th>
-              <th style={thStyle}>HP</th>
-              <th style={thStyle}>공격</th>
-              <th style={thStyle}>방어</th>
-              <th style={thStyle}>경험치</th>
-              <th style={thStyle}>골드</th>
-              <th style={thStyle}>액션</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((m) => {
-              const isHovered = hoveredRow === m.id;
-              const isImgHovered = hoveredImg === m.id;
-              const isUploading = uploadingId === m.id;
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+          {rows.map((m) => {
+            const isHovered = hoveredRow === m.id;
+            const isImgHovered = hoveredImg === m.id;
+            const isUploading = uploadingId === m.id;
 
-              return (
-                <tr
-                  key={m.id}
-                  style={{ backgroundColor: isHovered ? '#252545' : 'transparent', transition: 'background-color 0.15s' }}
-                  onMouseEnter={() => setHoveredRow(m.id)}
-                  onMouseLeave={() => setHoveredRow(null)}
-                >
-                  <td style={tdStyle}>
-                    <div
-                      style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: 6,
-                        overflow: 'hidden',
-                        backgroundColor: '#2a2a4a',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        position: 'relative',
-                        cursor: 'pointer',
-                      }}
-                      onMouseEnter={() => setHoveredImg(m.id)}
-                      onMouseLeave={() => setHoveredImg(null)}
-                    >
-                      {isUploading ? (
-                        <Spinner />
-                      ) : m.imageUrl ? (
-                        <>
-                          <img src={m.imageUrl} alt={m.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          {isImgHovered && (
-                            <button
-                              type="button"
-                              onClick={(e) => { e.stopPropagation(); handleImageDelete(m.id); }}
-                              style={{
-                                position: 'absolute',
-                                top: -2,
-                                right: -2,
-                                width: 16,
-                                height: 16,
-                                borderRadius: '50%',
-                                backgroundColor: '#e74c3c',
-                                color: '#fff',
-                                border: 'none',
-                                fontSize: 10,
-                                lineHeight: '16px',
-                                textAlign: 'center',
-                                cursor: 'pointer',
-                                padding: 0,
-                              }}
-                            >
-                              X
-                            </button>
-                          )}
-                        </>
-                      ) : (
-                        <span style={{ fontSize: 10, color: '#666' }}>없음</span>
-                      )}
-                      {!isUploading && (isImgHovered || !m.imageUrl) && (
-                        <label
-                          style={{
-                            position: 'absolute',
-                            bottom: 0,
-                            left: 0,
-                            right: 0,
-                            backgroundColor: 'rgba(0,0,0,0.6)',
-                            color: '#fff',
-                            fontSize: 9,
-                            textAlign: 'center',
-                            cursor: 'pointer',
-                            padding: '2px 0',
-                          }}
-                        >
-                          {m.imageUrl ? '변경' : '업로드'}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            style={{ display: 'none' }}
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) handleImageUpload(m.id, file);
-                              e.target.value = '';
+            return (
+              <div
+                key={m.id}
+                style={{
+                  backgroundColor: isHovered ? '#252545' : '#1a1a2e',
+                  borderRadius: 12,
+                  border: '1px solid #2a2a4a',
+                  padding: '16px 20px',
+                  transition: 'background-color 0.15s',
+                }}
+                onMouseEnter={() => setHoveredRow(m.id)}
+                onMouseLeave={() => setHoveredRow(null)}
+              >
+                {/* 헤더: 이미지 + 이름 + 액션 */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                  <div
+                    style={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: 8,
+                      overflow: 'hidden',
+                      backgroundColor: '#2a2a4a',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      position: 'relative',
+                      flexShrink: 0,
+                      cursor: 'pointer',
+                    }}
+                    onMouseEnter={() => setHoveredImg(m.id)}
+                    onMouseLeave={() => setHoveredImg(null)}
+                  >
+                    {isUploading ? (
+                      <Spinner />
+                    ) : m.imageUrl ? (
+                      <>
+                        <img src={m.imageUrl} alt={m.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        {isImgHovered && (
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleImageDelete(m.id); }}
+                            style={{
+                              position: 'absolute',
+                              top: 2,
+                              right: 2,
+                              width: 18,
+                              height: 18,
+                              borderRadius: '50%',
+                              backgroundColor: '#e74c3c',
+                              color: '#fff',
+                              border: 'none',
+                              fontSize: 10,
+                              lineHeight: '18px',
+                              textAlign: 'center',
+                              cursor: 'pointer',
+                              padding: 0,
                             }}
-                          />
-                        </label>
-                      )}
+                          >
+                            X
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      <span style={{ fontSize: 22 }}>👹</span>
+                    )}
+                    {!isUploading && (isImgHovered || !m.imageUrl) && (
+                      <label
+                        style={{
+                          position: 'absolute',
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          backgroundColor: 'rgba(0,0,0,0.65)',
+                          color: '#fff',
+                          fontSize: 9,
+                          textAlign: 'center',
+                          cursor: 'pointer',
+                          padding: '2px 0',
+                        }}
+                      >
+                        {m.imageUrl ? '변경' : '업로드'}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          style={{ display: 'none' }}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleImageUpload(m.id, file);
+                            e.target.value = '';
+                          }}
+                        />
+                      </label>
+                    )}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 15, fontWeight: 700, color: '#eee', marginBottom: 2 }}>{m.name}</p>
+                    <p style={{ fontSize: 12, color: '#888' }}>{getDungeonName(m.dungeonId)}</p>
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                    <AdminActionIconButton kind="edit" onClick={() => openEditModal(m)} />
+                    <AdminActionIconButton kind="delete" onClick={() => remove(m.id)} />
+                  </div>
+                </div>
+                {/* 스탯 그리드 */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6 }}>
+                  {[
+                    { label: 'HP', value: m.hp, color: '#ef4444' },
+                    { label: '공격', value: m.attack, color: '#f97316' },
+                    { label: '방어', value: m.defense, color: '#3b82f6' },
+                    { label: '경험치', value: m.expReward, color: '#22c55e' },
+                    { label: '골드', value: m.goldReward, color: '#fbbf24' },
+                  ].map(({ label, value, color }) => (
+                    <div key={label} style={{ backgroundColor: '#12122a', borderRadius: 6, padding: '6px 4px', textAlign: 'center' }}>
+                      <p style={{ fontSize: 10, color: '#888', marginBottom: 2 }}>{label}</p>
+                      <p style={{ fontSize: 12, fontWeight: 700, color }}>{value}</p>
                     </div>
-                  </td>
-                  <td style={tdStyle}>{m.name}</td>
-                  <td style={tdStyle}>{getDungeonName(m.dungeonId)}</td>
-                  <td style={tdStyle}>{m.hp}</td>
-                  <td style={tdStyle}>{m.attack}</td>
-                  <td style={tdStyle}>{m.defense}</td>
-                  <td style={tdStyle}>{m.expReward}</td>
-                  <td style={tdStyle}>{m.goldReward}</td>
-                  <td style={tdStyle}>
-                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                      <AdminActionIconButton kind="edit" onClick={() => openEditModal(m)} />
-                      <AdminActionIconButton kind="delete" onClick={() => remove(m.id)} />
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
 
       <AdminCrudModalForm

@@ -22,92 +22,143 @@ const navItems: NavItem[] = [
   { href: '/logs', label: '전투 로그', icon: '📜' },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  isMobileOpen?: boolean;
+  onMobileClose?: () => void;
+  isMobile?: boolean;
+}
+
+export function Sidebar({ isMobileOpen = false, onMobileClose, isMobile = false }: SidebarProps) {
   const pathname = usePathname();
   const { adminUser, logout } = useAdminAuth();
 
+  const handleNavClick = () => {
+    if (isMobile && onMobileClose) {
+      onMobileClose();
+    }
+  };
+
   return (
-    <aside
-      style={{
-        width: 240,
-        height: '100vh',
-        backgroundColor: '#12122a',
-        borderRight: '1px solid #2a2a4a',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'fixed',
-        left: 0,
-        top: 0,
-        zIndex: 100,
-      }}
-    >
-      <div
-        style={{
-          padding: '24px 20px',
-          borderBottom: '1px solid #2a2a4a',
-        }}
-      >
-        <h2 style={{ fontSize: 16, fontWeight: 700, color: '#6c5ce7' }}>Gate Breaker</h2>
-        <p style={{ fontSize: 12, color: '#888', marginTop: 4 }}>관리자 패널</p>
-      </div>
-
-      <nav style={{ flex: 1, padding: '12px 0', overflowY: 'auto' }}>
-        {navItems.map((item) => {
-          const isActive = pathname === item.href ||
-            (item.href !== '/dashboard' && pathname.startsWith(item.href));
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                padding: '10px 20px',
-                fontSize: 14,
-                color: isActive ? '#fff' : '#aaa',
-                backgroundColor: isActive ? '#6c5ce720' : 'transparent',
-                borderLeft: isActive ? '3px solid #6c5ce7' : '3px solid transparent',
-                transition: 'all 0.2s',
-                textDecoration: 'none',
-              }}
-            >
-              <span style={{ fontSize: 16 }}>{item.icon}</span>
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
-
-      <div
-        style={{
-          padding: '16px 20px',
-          borderTop: '1px solid #2a2a4a',
-        }}
-      >
-        {adminUser && (
-          <p style={{ fontSize: 12, color: '#888', marginBottom: 8 }}>
-            {adminUser.nickname || adminUser.loginId}
-          </p>
-        )}
-        <button
-          onClick={logout}
+    <>
+      {/* 모바일 오버레이 배경 */}
+      {isMobile && isMobileOpen && (
+        <div
+          onClick={onMobileClose}
           style={{
-            width: '100%',
-            padding: '8px 12px',
-            backgroundColor: 'transparent',
-            border: '1px solid #2a2a4a',
-            borderRadius: 6,
-            color: '#aaa',
-            fontSize: 13,
-            cursor: 'pointer',
-            transition: 'all 0.2s',
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            zIndex: 99,
+          }}
+        />
+      )}
+
+      <aside
+        style={{
+          width: 240,
+          height: '100vh',
+          backgroundColor: '#12122a',
+          borderRight: '1px solid #2a2a4a',
+          display: 'flex',
+          flexDirection: 'column',
+          position: 'fixed',
+          left: 0,
+          top: 0,
+          zIndex: 100,
+          transition: 'transform 0.3s ease',
+          transform: isMobile ? (isMobileOpen ? 'translateX(0)' : 'translateX(-100%)') : 'translateX(0)',
+        }}
+      >
+        <div
+          style={{
+            padding: '24px 20px',
+            borderBottom: '1px solid #2a2a4a',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
           }}
         >
-          로그아웃
-        </button>
-      </div>
-    </aside>
+          <div>
+            <h2 style={{ fontSize: 16, fontWeight: 700, color: '#6c5ce7' }}>Gate Breaker</h2>
+            <p style={{ fontSize: 12, color: '#888', marginTop: 4 }}>관리자 패널</p>
+          </div>
+          {isMobile && (
+            <button
+              onClick={onMobileClose}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#aaa',
+                fontSize: 20,
+                cursor: 'pointer',
+                padding: '4px 8px',
+                lineHeight: 1,
+              }}
+            >
+              ✕
+            </button>
+          )}
+        </div>
+
+        <nav style={{ flex: 1, padding: '12px 0', overflowY: 'auto' }}>
+          {navItems.map((item) => {
+            const isActive = pathname === item.href ||
+              (item.href !== '/dashboard' && pathname.startsWith(item.href));
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={handleNavClick}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  padding: '10px 20px',
+                  fontSize: 14,
+                  color: isActive ? '#fff' : '#aaa',
+                  backgroundColor: isActive ? '#6c5ce720' : 'transparent',
+                  borderLeft: isActive ? '3px solid #6c5ce7' : '3px solid transparent',
+                  transition: 'all 0.2s',
+                  textDecoration: 'none',
+                }}
+              >
+                <span style={{ fontSize: 16 }}>{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div
+          style={{
+            padding: '16px 20px',
+            borderTop: '1px solid #2a2a4a',
+          }}
+        >
+          {adminUser && (
+            <p style={{ fontSize: 12, color: '#888', marginBottom: 8 }}>
+              {adminUser.nickname || adminUser.loginId}
+            </p>
+          )}
+          <button
+            onClick={logout}
+            style={{
+              width: '100%',
+              padding: '8px 12px',
+              backgroundColor: 'transparent',
+              border: '1px solid #2a2a4a',
+              borderRadius: 6,
+              color: '#aaa',
+              fontSize: 13,
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+            }}
+          >
+            로그아웃
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }

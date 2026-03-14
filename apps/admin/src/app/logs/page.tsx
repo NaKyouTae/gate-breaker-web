@@ -111,78 +111,71 @@ export default function LogsPage() {
 
       {!loading && !error && data && (
         <>
-          <div style={{ overflowX: 'auto' }}>
-            <table
-              style={{
-                width: '100%',
-                borderCollapse: 'collapse',
-                backgroundColor: '#1a1a2e',
-                borderRadius: 8,
-                overflow: 'hidden',
-              }}
-            >
-              <thead style={{ backgroundColor: '#16213e' }}>
-                <tr>
-                  <th style={tableHeaderStyle}>유저</th>
-                  <th style={tableHeaderStyle}>던전</th>
-                  <th style={tableHeaderStyle}>결과</th>
-                  <th style={tableHeaderStyle}>골드</th>
-                  <th style={tableHeaderStyle}>경험치</th>
-                  <th style={tableHeaderStyle}>일시</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.data.map((log) => {
-                  const badge = RESULT_BADGE_STYLES[log.result];
-                  return (
-                    <tr
-                      key={log.id}
-                      onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLTableRowElement).style.backgroundColor = '#252545';
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLTableRowElement).style.backgroundColor = 'transparent';
-                      }}
-                    >
-                      <td style={{ ...tableCellStyle, fontFamily: 'monospace', fontSize: 12 }}>
+          {data.data.length === 0 ? (
+            <p style={{ textAlign: 'center', color: '#888', padding: '60px 0' }}>전투 로그가 없습니다.</p>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+              {data.data.map((log) => {
+                const badge = RESULT_BADGE_STYLES[log.result];
+                return (
+                  <div
+                    key={log.id}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLDivElement).style.backgroundColor = '#252545';
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLDivElement).style.backgroundColor = '#1a1a2e';
+                    }}
+                    style={{
+                      backgroundColor: '#1a1a2e',
+                      borderRadius: 12,
+                      border: '1px solid #2a2a4a',
+                      padding: '16px 20px',
+                      transition: 'background-color 0.15s',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                      <p style={{ fontSize: 14, fontWeight: 700, color: '#eee' }}>
                         {log.player?.nickname || log.userId?.slice(0, 8) || '-'}
-                      </td>
-                      <td style={{ ...tableCellStyle, fontFamily: 'monospace', fontSize: 12 }}>
+                        <span style={{ color: '#555', margin: '0 6px' }}>→</span>
                         {log.dungeon?.name || log.dungeonId?.slice(0, 8) || '-'}
-                      </td>
-                      <td style={tableCellStyle}>
-                        <span
-                          style={{
-                            display: 'inline-block',
-                            padding: '2px 10px',
-                            borderRadius: 4,
-                            fontSize: 12,
-                            fontWeight: 600,
-                            backgroundColor: badge.bg,
-                            color: badge.color,
-                          }}
-                        >
-                          {badge.label}
-                        </span>
-                      </td>
-                      <td style={tableCellStyle}>{(log.goldEarned ?? log.earnedGold ?? 0).toLocaleString()}</td>
-                      <td style={tableCellStyle}>{(log.expEarned ?? log.earnedExp ?? 0).toLocaleString()}</td>
-                      <td style={{ ...tableCellStyle, color: '#aaa', fontSize: 13 }}>
-                        {new Date(log.createdAt).toLocaleString('ko-KR')}
-                      </td>
-                    </tr>
-                  );
-                })}
-                {data.data.length === 0 && (
-                  <tr>
-                    <td colSpan={6} style={{ ...tableCellStyle, textAlign: 'center', color: '#888', padding: 32 }}>
-                      전투 로그가 없습니다.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                      </p>
+                      <span
+                        style={{
+                          padding: '2px 10px',
+                          borderRadius: 4,
+                          fontSize: 12,
+                          fontWeight: 600,
+                          backgroundColor: badge.bg,
+                          color: badge.color,
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {badge.label}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
+                      <div style={{ backgroundColor: '#12122a', borderRadius: 8, padding: '6px 12px', flex: 1 }}>
+                        <p style={{ fontSize: 11, color: '#888', marginBottom: 1 }}>골드</p>
+                        <p style={{ fontSize: 14, fontWeight: 700, color: '#fbbf24' }}>
+                          {(log.goldEarned ?? log.earnedGold ?? 0).toLocaleString()}
+                        </p>
+                      </div>
+                      <div style={{ backgroundColor: '#12122a', borderRadius: 8, padding: '6px 12px', flex: 1 }}>
+                        <p style={{ fontSize: 11, color: '#888', marginBottom: 1 }}>경험치</p>
+                        <p style={{ fontSize: 14, fontWeight: 700, color: '#22c55e' }}>
+                          {(log.expEarned ?? log.earnedExp ?? 0).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                    <p style={{ fontSize: 11, color: '#555' }}>
+                      {new Date(log.createdAt).toLocaleString('ko-KR')}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           <div
             style={{
