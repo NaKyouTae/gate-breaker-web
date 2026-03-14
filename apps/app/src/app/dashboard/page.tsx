@@ -212,6 +212,10 @@ function DashboardContent() {
         maxWidth: '480px',
         margin: '0 auto',
         padding: '16px',
+        minHeight: 'calc(100dvh - 120px)',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
       }}
     >
       <input
@@ -245,7 +249,7 @@ function DashboardContent() {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '24px 0 8px',
+          padding: '8px 0',
           gap: '16px',
         }}
       >
@@ -402,20 +406,20 @@ function DashboardContent() {
           onClick={handleOpenDungeonModal}
           style={{
             display: 'flex',
-            flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            width: '80px',
-            height: '68px',
+            gap: '10px',
+            width: '120px',
+            height: '48px',
             background: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
             border: '2px solid rgba(167,139,250,0.55)',
             borderRadius: '12px',
             cursor: 'pointer',
             boxShadow: '0 4px 16px rgba(124,58,237,0.4)',
-            padding: 0,
+            padding: '0 10px',
           }}
         >
-          <svg width="32" height="32" viewBox="-1 -1 26 26" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="24" height="24" viewBox="-1 -1 26 26" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="4" y1="4" x2="20" y2="20" />
             <line x1="4" y1="4" x2="8" y2="4" />
             <line x1="4" y1="4" x2="4" y2="8" />
@@ -423,7 +427,7 @@ function DashboardContent() {
             <line x1="20" y1="4" x2="16" y2="4" />
             <line x1="20" y1="4" x2="20" y2="8" />
           </svg>
-          <span style={{ fontSize: '13px', fontWeight: 800, color: '#fff', marginTop: '6px' }}>
+          <span style={{ fontSize: '15px', fontWeight: 800, color: '#fff', lineHeight: 1 }}>
             던전
           </span>
         </button>
