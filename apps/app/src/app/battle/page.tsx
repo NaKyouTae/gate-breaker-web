@@ -181,7 +181,7 @@ function BattleContent() {
 
     if (dungeonId && (!existing || existing.dungeonId !== dungeonId)) {
       const dgName = searchParams.get('dgName') || '';
-      const monsterCount = Math.floor(Math.random() * 3) + 3;
+      const monsterCount = Math.floor(Math.random() * 5) + 1;
       const total = hasResumeProgress ? resumeTotalRaw : monsterCount + 1;
       const currentMonsterIndex = hasResumeProgress ? resumeIndexRaw : 0;
       const progress: DungeonProgress = {
@@ -378,7 +378,7 @@ function BattleContent() {
         enemyMaxHp: attackResult.enemyMaxHp ?? session.enemyMaxHp,
         log: attackResult.log ?? session.log,
         result: (attackResult.status === 'CONTINUE' ? null : attackResult.status) as BattleSession['result'],
-        rewards: attackResult.rewards as BattleSession['rewards'],
+        rewards: (attackResult.rewards ?? (isVictory && attackResult.expGained != null ? { exp: attackResult.expGained, gold: attackResult.goldGained ?? 0, items: [] } : undefined)) as BattleSession['rewards'],
         penalty: attackResult.penalty,
       };
 

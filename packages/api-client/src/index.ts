@@ -201,6 +201,8 @@ export const battle = {
       result?: string | null;
       rewards?: { exp: number; gold: number; items: unknown[] };
       penalty?: { previousExp: number; expLost: number; currentExp: number; goldLost: number } | null;
+      expGained?: number;
+      goldGained?: number;
     }>('/battle/attack', { method: 'POST' }),
   skill: () =>
     request<{
@@ -215,6 +217,8 @@ export const battle = {
       result?: string | null;
       rewards?: { exp: number; gold: number; items: unknown[] };
       penalty?: { previousExp: number; expLost: number; currentExp: number; goldLost: number } | null;
+      expGained?: number;
+      goldGained?: number;
     }>('/battle/skill', { method: 'POST' }),
   item: () =>
     request<BattleLogEntry>('/battle/item', { method: 'POST' }),
