@@ -12,6 +12,7 @@ import type {
   EnhanceResult,
   ShopItem,
   Channel,
+  ChannelMember,
   ChatMessage,
   DashboardStats,
   PaginatedResponse,
@@ -256,7 +257,7 @@ export const shop = {
 export const channel = {
   list: () => request<Channel[]>('/channel'),
   search: (name: string) => request<Channel[]>(`/channel/search?name=${encodeURIComponent(name)}`),
-  me: () => request<Channel>('/channel/me'),
+  me: () => request<(ChannelMember & { channel: Channel })[]>('/channel/me'),
   get: (id: string) => request<Channel>(`/channel/${id}`),
   create: (name: string, maxMembers?: number) =>
     request<Channel>('/channel', {
@@ -408,4 +409,4 @@ export const admin = {
 };
 
 export { ApiError };
-export type { AuthResponse, User, UserStats, InventoryItem, Dungeon, BattleSession, BattleLogEntry, EnhanceInfo, EnhanceResult, ShopItem, Channel, ChatMessage, DashboardStats, PaginatedResponse, Monster, Item, DropTable, BattleLog, UserDetail, CodexItem, CodexItemDetail, CodexMonster, CodexMonsterDetail };
+export type { AuthResponse, User, UserStats, InventoryItem, Dungeon, BattleSession, BattleLogEntry, EnhanceInfo, EnhanceResult, ShopItem, Channel, ChannelMember, ChatMessage, DashboardStats, PaginatedResponse, Monster, Item, DropTable, BattleLog, UserDetail, CodexItem, CodexItemDetail, CodexMonster, CodexMonsterDetail };

@@ -84,7 +84,7 @@ export function EnhanceView({ item, gold, onClose, onComplete }: EnhanceViewProp
     try {
       const [result] = await Promise.all([
         enhance.enhance(enhanceItem.id),
-        new Promise((r) => setTimeout(r, 1500)),
+        new Promise((r) => setTimeout(r, 700)),
       ]);
       pendingResultRef.current = result;
       setEffectType(result.success ? 'success' : 'failure');
