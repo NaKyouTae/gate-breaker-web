@@ -55,7 +55,10 @@
       "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/app/src -type f \\\\\\(-name *profile* -o -name *modal* -o -name *header* \\\\\\))",
       "Bash(wc -l apps/app/src/app/channel/\\\\[id\\\\]/page.tsx)",
       "Bash(grep -r \"dungeon\\\\|monster\\\\|Dungeon\\\\|Monster\" /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/admin --include=*.tsx --include=*.ts -l)",
-      "Bash(grep -r \"item-box\\\\|item-name\\\\|item-price\" /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps --include=*.tsx --include=*.ts --include=*.css)"
+      "Bash(grep -r \"item-box\\\\|item-name\\\\|item-price\" /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps --include=*.tsx --include=*.ts --include=*.css)",
+      "Bash(grep -r \"purgeNonWeaponEquipment\\\\|removeNonWeapon\\\\|deleteWeapon\\\\|old.*weapon\\\\|legacy.*weapon\" /Users/nakyutae/personal/git/gate-breaker/gate-breaker-server/src --include=*.ts)",
+      "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-server -name *attack* -o -name *battle* -o -name *damage*)",
+      "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-server/src/battle -type f \\\\\\(-name *.ts -o -name *.js \\\\\\))"
     ],
     "additionalDirectories": [
       "/Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/admin/.next",

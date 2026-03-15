@@ -356,13 +356,30 @@ function BattleContent() {
     const prevEnemyHp = session.enemyHp;
     const prevPlayerHp = session.playerHp;
 
-    // Phase 1: Player attack animation
+    // Start player attack animation and API call simultaneously
     setPlayerAttackAnim(true);
     setTimeout(() => setPlayerAttackAnim(false), 300);
 
     try {
-      await battleApi.attack();
-      const updated = await battleApi.status();
+      const attackResult = await battleApi.attack();
+
+      // Build updated session from attack response (no need for separate status() call)
+      // VICTORY response doesn't include HP fields, so derive them from status
+      const isVictory = attackResult.status === 'VICTORY';
+      const isDefeat = attackResult.status === 'DEFEAT';
+      const updated: BattleSession = {
+        ...session,
+        playerHp: attackResult.playerHp ?? (isDefeat ? 0 : session.playerHp),
+        playerMaxHp: attackResult.playerMaxHp ?? session.playerMaxHp,
+        playerMp: attackResult.playerMp ?? session.playerMp,
+        playerMaxMp: attackResult.playerMaxMp ?? session.playerMaxMp,
+        enemyHp: attackResult.enemyHp ?? (isVictory ? 0 : session.enemyHp),
+        enemyMaxHp: attackResult.enemyMaxHp ?? session.enemyMaxHp,
+        log: attackResult.log ?? session.log,
+        result: (attackResult.status === 'CONTINUE' ? null : attackResult.status) as BattleSession['result'],
+        rewards: attackResult.rewards as BattleSession['rewards'],
+        penalty: attackResult.penalty,
+      };
 
       const enemyDmg = prevEnemyHp - updated.enemyHp;
       const playerDmg = prevPlayerHp - updated.playerHp;
@@ -376,13 +393,13 @@ function BattleContent() {
         ? [...allLogs.slice(0, lastEnemyIdx), ...allLogs.slice(lastEnemyIdx + 1)]
         : [...allLogs];
 
-      // Show monster taking damage first (with player-only logs)
+      // Show monster taking damage immediately (applies to both continue and victory)
       if (enemyDmg > 0) {
         setSession(prev => prev ? { ...updated, playerHp: prevPlayerHp, log: playerLogs } : updated);
         setAttackShake(true);
         setMonsterHitFlash(true);
         setDamageNumber(enemyDmg);
-        await delay(600);
+        await delay(350);
         setAttackShake(false);
         setMonsterHitFlash(false);
         setDamageNumber(null);
@@ -390,29 +407,27 @@ function BattleContent() {
         setSession(prev => prev ? { ...updated, playerHp: prevPlayerHp, log: playerLogs } : updated);
       }
 
-      // If battle ended with victory, set final state and done
+      // If battle ended with victory, set final state after damage animation
       if (updated.result === 'VICTORY') {
         setSession(updated);
         setActing(false);
         return;
       }
 
-      // Phase 2: Monster counter-attack after delay
+      // Phase 2: Monster counter-attack
       if (playerDmg > 0) {
-        await delay(900);
+        await delay(200);
         setMonsterAttacking(true);
-        await delay(300);
+        await delay(200);
         setMonsterAttacking(false);
         setPlayerHitFlash(true);
         setPlayerDamageNumber(playerDmg);
-        // Now update player HP and show full logs including monster attack
         setSession({ ...updated, log: allLogs });
-        await delay(500);
+        await delay(350);
         setPlayerHitFlash(false);
         setPlayerDamageNumber(null);
       } else {
-        // Monster missed or no counter-attack
-        await delay(900);
+        await delay(200);
         setSession({ ...updated, log: allLogs });
       }
 

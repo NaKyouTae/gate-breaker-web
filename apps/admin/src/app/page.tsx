@@ -11,6 +11,16 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [saveLoginId, setSaveLoginId] = useState(false);
+
+  // 저장된 아이디 불러오기
+  React.useEffect(() => {
+    const savedId = localStorage.getItem('savedLoginId');
+    if (savedId) {
+      setLoginId(savedId);
+      setSaveLoginId(true);
+    }
+  }, []);
 
   React.useEffect(() => {
     if (!isLoading && isAuthenticated) {
@@ -24,6 +34,11 @@ export default function AdminLoginPage() {
     setSubmitting(true);
     try {
       await login(loginId, password);
+      if (saveLoginId) {
+        localStorage.setItem('savedLoginId', loginId);
+      } else {
+        localStorage.removeItem('savedLoginId');
+      }
       router.push('/dashboard');
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '로그인에 실패했습니다.';
@@ -123,6 +138,26 @@ export default function AdminLoginPage() {
               }}
             />
           </div>
+
+          <label
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              fontSize: 13,
+              color: '#aaa',
+              cursor: 'pointer',
+              userSelect: 'none',
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={saveLoginId}
+              onChange={(e) => setSaveLoginId(e.target.checked)}
+              style={{ accentColor: '#6c5ce7', cursor: 'pointer' }}
+            />
+            아이디 저장
+          </label>
 
           {error && (
             <p style={{ color: '#ff6b6b', fontSize: 13, textAlign: 'center' }}>{error}</p>

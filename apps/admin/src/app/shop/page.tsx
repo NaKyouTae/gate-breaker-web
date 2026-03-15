@@ -1,9 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { admin } from '@gate-breaker/api-client';
 import type { Item, ItemRarity, ItemType } from '@gate-breaker/types';
-import { Input, Spinner, useToast } from '@gate-breaker/ui';
+import { Button, Input, Spinner, useToast } from '@gate-breaker/ui';
 import { AdminActionIconButton } from '@/components/admin-action-icon-button';
 import { AdminLayout } from '@/components/admin-layout';
 import { AdminCrudModalForm, AdminFormField } from '@/components/admin-crud-modal-form';
@@ -27,22 +27,6 @@ const RARITY_LABELS: Record<ItemRarity, string> = {
   MYTHIC: '신화',
 };
 
-const thStyle: React.CSSProperties = {
-  padding: '12px 16px',
-  textAlign: 'left',
-  fontSize: 13,
-  fontWeight: 600,
-  color: '#aaa',
-  borderBottom: '1px solid #333',
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: '12px 16px',
-  fontSize: 14,
-  color: '#eee',
-  borderBottom: '1px solid #333',
-};
-
 export default function ShopPage() {
   const { addToast } = useToast();
   const [items, setItems] = useState<Item[]>([]);
@@ -51,6 +35,15 @@ export default function ShopPage() {
   const [hoveredRow, setHoveredRow] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [editingPrice, setEditingPrice] = useState(0);
+
+  // 등록 모달 상태
+  const [registerOpen, setRegisterOpen] = useState(false);
+  const [allItems, setAllItems] = useState<Item[]>([]);
+  const [allItemsLoading, setAllItemsLoading] = useState(false);
+  const [selectedItemId, setSelectedItemId] = useState<string>('');
+  const [registerPrice, setRegisterPrice] = useState(0);
+  const [registerLoading, setRegisterLoading] = useState(false);
+  const [registerSearch, setRegisterSearch] = useState('');
 
   const fetchRows = useCallback(async () => {
     try {
@@ -93,9 +86,70 @@ export default function ShopPage() {
     }
   };
 
+  // 등록 모달
+  const openRegisterModal = async () => {
+    setRegisterOpen(true);
+    setSelectedItemId('');
+    setRegisterPrice(0);
+    setRegisterSearch('');
+    setAllItemsLoading(true);
+    try {
+      const data = await admin.items.list();
+      setAllItems(data);
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : '아이템 목록을 불러오지 못했습니다.', 'error');
+    } finally {
+      setAllItemsLoading(false);
+    }
+  };
+
+  const closeRegisterModal = () => {
+    setRegisterOpen(false);
+    setSelectedItemId('');
+    setRegisterPrice(0);
+    setRegisterSearch('');
+  };
+
+  const shopItemIds = useMemo(() => new Set(items.map((i) => i.id)), [items]);
+
+  const availableItems = useMemo(() => {
+    const unregistered = allItems.filter((i) => !shopItemIds.has(i.id));
+    if (!registerSearch.trim()) return unregistered;
+    const q = registerSearch.trim().toLowerCase();
+    return unregistered.filter(
+      (i) =>
+        i.name.toLowerCase().includes(q) ||
+        i.category.toLowerCase().includes(q) ||
+        TYPE_LABELS[i.type].includes(q),
+    );
+  }, [allItems, shopItemIds, registerSearch]);
+
+  const selectedItem = useMemo(
+    () => allItems.find((i) => i.id === selectedItemId) ?? null,
+    [allItems, selectedItemId],
+  );
+
+  const register = async () => {
+    if (!selectedItemId || registerPrice <= 0) return;
+    setRegisterLoading(true);
+    try {
+      await admin.shop.update(selectedItemId, { buyPrice: registerPrice });
+      addToast('상점에 아이템을 등록했습니다.', 'success');
+      closeRegisterModal();
+      await fetchRows();
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : '상점 등록에 실패했습니다.', 'error');
+    } finally {
+      setRegisterLoading(false);
+    }
+  };
+
   return (
     <AdminLayout>
-      <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 20, color: '#eee' }}>상점 관리</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: '#eee' }}>상점 관리</h1>
+        <Button size="sm" onClick={openRegisterModal}>+ 아이템 등록</Button>
+      </div>
 
       {loading ? (
         <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}><Spinner /></div>
@@ -167,6 +221,98 @@ export default function ShopPage() {
                 onChange={(e) => {
                   const value = Number(e.target.value || 0);
                   setEditingPrice(Number.isFinite(value) ? value : 0);
+                }}
+              />
+            </AdminFormField>
+          </>
+        )}
+      </AdminCrudModalForm>
+
+      {/* 등록 모달 */}
+      <AdminCrudModalForm
+        isOpen={registerOpen}
+        onClose={closeRegisterModal}
+        onSubmit={register}
+        title="상점 아이템 등록"
+        submitLabel="등록"
+        loading={registerLoading}
+      >
+        {allItemsLoading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: 30 }}><Spinner /></div>
+        ) : (
+          <>
+            <AdminFormField label="아이템 검색">
+              <Input
+                placeholder="이름, 카테고리, 타입으로 검색..."
+                value={registerSearch}
+                onChange={(e) => setRegisterSearch(e.target.value)}
+              />
+            </AdminFormField>
+
+            <AdminFormField label="아이템 선택">
+              {availableItems.length === 0 ? (
+                <p style={{ color: '#888', fontSize: 13, padding: '8px 0' }}>
+                  {registerSearch ? '검색 결과가 없습니다.' : '등록 가능한 아이템이 없습니다.'}
+                </p>
+              ) : (
+                <div style={{ maxHeight: 200, overflowY: 'auto', display: 'grid', gap: 4 }}>
+                  {availableItems.map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={() => setSelectedItemId(item.id)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 10,
+                        padding: '8px 12px',
+                        borderRadius: 8,
+                        cursor: 'pointer',
+                        backgroundColor: selectedItemId === item.id ? '#3a2d6e' : '#12122a',
+                        border: selectedItemId === item.id ? '1px solid #6c5ce7' : '1px solid transparent',
+                        transition: 'all 0.1s',
+                      }}
+                    >
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: '#eee', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {item.name}
+                        </p>
+                        <div style={{ display: 'flex', gap: 4, marginTop: 2 }}>
+                          <span style={{ fontSize: 10, color: '#888' }}>{TYPE_LABELS[item.type]}</span>
+                          <span style={{ fontSize: 10, color: '#a78bfa' }}>{RARITY_LABELS[item.rarity]}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </AdminFormField>
+
+            {selectedItem && (
+              <div style={{ backgroundColor: '#12122a', borderRadius: 8, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <p style={{ fontSize: 13, fontWeight: 600, color: '#eee' }}>{selectedItem.name}</p>
+                <div style={{ display: 'flex', gap: 8, fontSize: 11, color: '#aaa' }}>
+                  <span>{selectedItem.category}</span>
+                  <span>{TYPE_LABELS[selectedItem.type]}</span>
+                  <span style={{ color: '#a78bfa' }}>{RARITY_LABELS[selectedItem.rarity]}</span>
+                </div>
+                {(selectedItem.baseAttack > 0 || selectedItem.baseDefense > 0 || selectedItem.baseHp > 0) && (
+                  <div style={{ display: 'flex', gap: 8, fontSize: 11, marginTop: 2 }}>
+                    {selectedItem.baseAttack > 0 && <span style={{ color: '#ef4444' }}>ATK {selectedItem.baseAttack}</span>}
+                    {selectedItem.baseDefense > 0 && <span style={{ color: '#3b82f6' }}>DEF {selectedItem.baseDefense}</span>}
+                    {selectedItem.baseHp > 0 && <span style={{ color: '#22c55e' }}>HP {selectedItem.baseHp}</span>}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <AdminFormField label="판매 가격 (G)">
+              <Input
+                type="number"
+                placeholder="0"
+                value={String(registerPrice || '')}
+                onChange={(e) => {
+                  const value = Number(e.target.value || 0);
+                  setRegisterPrice(Number.isFinite(value) ? value : 0);
                 }}
               />
             </AdminFormField>

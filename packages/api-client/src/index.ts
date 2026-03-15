@@ -85,9 +85,16 @@ async function request<T>(
       } catch {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-        window.location.href = '/login';
+        localStorage.removeItem('adminUser');
+        window.location.href = '/';
+        return undefined as T;
       }
     }
+    // refreshToken 없는 경우에도 로그인 화면으로 이동
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('adminUser');
+    window.location.href = '/';
+    return undefined as T;
   }
 
   if (!res.ok) {
@@ -172,9 +179,33 @@ export const dungeon = {
 // ===== Battle =====
 export const battle = {
   attack: () =>
-    request<BattleLogEntry>('/battle/attack', { method: 'POST' }),
+    request<{
+      status: string;
+      playerHp: number;
+      playerMaxHp: number;
+      playerMp: number;
+      playerMaxMp: number;
+      enemyHp: number;
+      enemyMaxHp: number;
+      log: BattleLogEntry[];
+      result?: string | null;
+      rewards?: { exp: number; gold: number; items: unknown[] };
+      penalty?: { previousExp: number; expLost: number; currentExp: number; goldLost: number } | null;
+    }>('/battle/attack', { method: 'POST' }),
   skill: () =>
-    request<BattleLogEntry>('/battle/skill', { method: 'POST' }),
+    request<{
+      status: string;
+      playerHp: number;
+      playerMaxHp: number;
+      playerMp: number;
+      playerMaxMp: number;
+      enemyHp: number;
+      enemyMaxHp: number;
+      log: BattleLogEntry[];
+      result?: string | null;
+      rewards?: { exp: number; gold: number; items: unknown[] };
+      penalty?: { previousExp: number; expLost: number; currentExp: number; goldLost: number } | null;
+    }>('/battle/skill', { method: 'POST' }),
   item: () =>
     request<BattleLogEntry>('/battle/item', { method: 'POST' }),
   escape: () =>
