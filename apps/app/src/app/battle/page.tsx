@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { battle as battleApi, dungeon as dungeonApi, inventory as inventoryApi, user as userApi } from '@gate-breaker/api-client';
-import type { BattleSession, InventoryItem } from '@gate-breaker/types';
+import type { BattleSession, InventoryItem, Item, ItemRarity } from '@gate-breaker/types';
 import { Button, Spinner, Modal, useToast } from '@gate-breaker/ui';
 import { useAuth } from '@/context/auth-context';
 
@@ -112,7 +112,7 @@ function BattleContent() {
   const [showDefeatModal, setShowDefeatModal] = useState(false);
   const [dungeonProgress, setDungeonProgress] = useState<DungeonProgress | null>(null);
   const [showDungeonClear, setShowDungeonClear] = useState(false);
-  const [totalRewards, setTotalRewards] = useState<{ exp: number; gold: number }>({ exp: 0, gold: 0 });
+  const [totalRewards, setTotalRewards] = useState<{ exp: number; gold: number; items: Item[] }>({ exp: 0, gold: 0, items: [] });
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [levelUpInfo, setLevelUpInfo] = useState<{ prevLevel: number; newLevel: number; prevMaxHp: number; newMaxHp: number; prevMaxMp: number; newMaxMp: number; prevDefense: number; newDefense: number } | null>(null);
   const logEndRef = useRef<HTMLDivElement>(null);
@@ -279,6 +279,7 @@ function BattleContent() {
       setTotalRewards(prev => ({
         exp: prev.exp + currentSession.rewards!.exp,
         gold: prev.gold + currentSession.rewards!.gold,
+        items: [...prev.items, ...(currentSession.rewards!.items || [])],
       }));
     }
 
@@ -567,7 +568,7 @@ function BattleContent() {
   const handleDungeonClearConfirm = useCallback(async () => {
     const prevUser = authUser;
     setShowDungeonClear(false);
-    setTotalRewards({ exp: 0, gold: 0 });
+    setTotalRewards({ exp: 0, gold: 0, items: [] });
     await refreshUser();
     const newUser = await userApi.me();
     if (prevUser && newUser && newUser.level > prevUser.level) {
@@ -1473,9 +1474,28 @@ function BattleContent() {
               <span style={{ color: '#888' }}>총 골드</span>
               <span style={{ color: '#fbbf24', fontWeight: 700 }}>+{totalRewards.gold.toLocaleString()} G</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', fontSize: '14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', fontSize: '14px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
               <span style={{ color: '#888' }}>총 경험치</span>
               <span style={{ color: '#2ecc71', fontWeight: 700 }}>+{totalRewards.exp.toLocaleString()} EXP</span>
+            </div>
+            <div style={{ padding: '8px 0', fontSize: '14px' }}>
+              <span style={{ color: '#888' }}>획득 아이템</span>
+              {totalRewards.items.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px' }}>
+                  {totalRewards.items.map((item, idx) => {
+                    const rarityColors: Record<ItemRarity, string> = { COMMON: '#888', RARE: '#4a9eff', EPIC: '#b048f8', LEGENDARY: '#ff8c00', MYTHIC: '#ff2d55' };
+                    const color = rarityColors[item.rarity] || '#888';
+                    return (
+                      <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', borderRadius: '6px', background: `${color}10` }}>
+                        {item.imageUrl && <img src={item.imageUrl} alt={item.name} style={{ width: 20, height: 20, borderRadius: '4px' }} />}
+                        <span style={{ color, fontWeight: 700, fontSize: '13px' }}>{item.name}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <span style={{ color: '#555', marginLeft: '8px', fontWeight: 500 }}>없음</span>
+              )}
             </div>
           </div>
 

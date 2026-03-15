@@ -237,8 +237,16 @@ export default function ChannelDetailPage() {
     if (effectType || pendingEnhanceEntries.length === 0) return;
 
     const next = pendingEnhanceEntries[0];
-    const success = Boolean(next.data.success);
-    setEffectType(success ? 'success' : 'failure');
+    const d = next.data as { success?: boolean; destroyed?: boolean; enhanceLevel?: number; prevLevel?: number };
+    if (d.success) {
+      setEffectType('success');
+    } else if (d.destroyed) {
+      setEffectType('destroy');
+    } else if (typeof d.enhanceLevel === 'number' && typeof d.prevLevel === 'number' && d.enhanceLevel < d.prevLevel) {
+      setEffectType('downgrade');
+    } else {
+      setEffectType('maintain');
+    }
   }, [effectType, pendingEnhanceEntries]);
 
   const filteredCommands = useMemo(() => {

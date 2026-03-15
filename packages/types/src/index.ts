@@ -203,18 +203,21 @@ export interface EnhanceInfo {
   item: Item;
   currentLevel: number;
   nextLevel?: number;
-  successRate: number;
-  failurePenalty: string;
+  successRate?: number;
+  failurePenalty?: string;
   maintainRate?: number;
   downgradeRate?: number;
   destroyRate?: number;
-  cost: number;
+  cost?: number;
+  maxLevel?: boolean;
+  message?: string;
 }
 
 export interface EnhanceResult {
   success: boolean;
-  newLevel?: number;
+  enhanceLevel: number;
   message: string;
+  destroyed?: boolean;
 }
 
 // ===== Shop =====

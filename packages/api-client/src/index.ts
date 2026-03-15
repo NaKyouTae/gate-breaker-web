@@ -236,10 +236,10 @@ export const battle = {
 export const enhance = {
   info: (inventoryId: string) =>
     request<EnhanceInfo>(`/enhance/info/${inventoryId}`),
-  enhance: (inventoryId: string) =>
+  enhance: (inventoryId: string, enhanceStoneId?: string) =>
     request<EnhanceResult>('/enhance', {
       method: 'POST',
-      body: JSON.stringify({ inventoryId }),
+      body: JSON.stringify({ inventoryId, ...(enhanceStoneId ? { enhanceStoneId } : {}) }),
     }),
 };
 

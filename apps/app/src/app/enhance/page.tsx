@@ -8,6 +8,7 @@ import { Badge, Card, Spinner, useToast } from '@gate-breaker/ui';
 import { useAuth } from '@/context/auth-context';
 import { EnhanceView } from '@/components/enhance-view';
 import { getEnhanceColor } from '@/lib/enhance-color';
+import { isEnhanceStone } from '@/lib/enhance-stone';
 
 const ENHANCABLE_TYPES = new Set(['WEAPON', 'ARMOR', 'GLOVE', 'SHOE', 'RING', 'NECKLACE']);
 
@@ -17,6 +18,7 @@ export default function EnhancePage() {
   const { addToast } = useToast();
 
   const [items, setItems] = useState<InventoryItem[]>([]);
+  const [stones, setStones] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<InventoryItem | null>(null);
 
@@ -25,6 +27,10 @@ export default function EnhancePage() {
       const allItems = await inventory.list();
       const filtered = allItems.filter((inv) => ENHANCABLE_TYPES.has(inv.item.type));
       setItems(filtered);
+      const stoneItems = allItems.filter(
+        (inv) => inv.item.type === 'MATERIAL' && isEnhanceStone(inv.item.name) && inv.quantity > 0,
+      );
+      setStones(stoneItems);
     } catch (err) {
       const message = err instanceof Error ? err.message : '강화 목록을 불러오지 못했습니다.';
       addToast(message, 'error');
@@ -61,6 +67,7 @@ export default function EnhancePage() {
       <EnhanceView
         item={selected}
         gold={user?.gold}
+        stones={stones}
         onClose={() => setSelected(null)}
         onComplete={async () => {
           await Promise.all([refreshInventory(), refreshUser()]);

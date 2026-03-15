@@ -1,6 +1,7 @@
 'use client';
 
 import type { Dungeon } from '@gate-breaker/types';
+import { getStoneForDungeonIndex } from '@/lib/enhance-stone';
 
 export interface OngoingBattleInfo {
   dungeonId: string;
@@ -88,9 +89,10 @@ export function DungeonListPanel({
         </div>
       )}
 
-      {dungeons.map((d) => {
+      {dungeons.map((d, dungeonIndex) => {
         const canEnter = true;
         const isEntering = enteringId === d.id;
+        const stoneConfig = getStoneForDungeonIndex(dungeonIndex);
 
         return (
           <div
@@ -174,6 +176,37 @@ export function DungeonListPanel({
                 </span>
               </span>
             </div>
+
+            {stoneConfig && (
+              <div style={{
+                marginTop: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '12px',
+              }}>
+                <span style={{
+                  width: '18px',
+                  height: '18px',
+                  borderRadius: '4px',
+                  background: `radial-gradient(circle, ${stoneConfig.glow}, transparent)`,
+                  border: `1px solid ${stoneConfig.color}`,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '10px',
+                  flexShrink: 0,
+                }}>
+                  💎
+                </span>
+                <span style={{ color: stoneConfig.color, fontWeight: 700 }}>
+                  {stoneConfig.name}
+                </span>
+                <span style={{ color: '#666', fontSize: '11px' }}>
+                  (성공률 +{stoneConfig.bonusRate}%)
+                </span>
+              </div>
+            )}
 
             {d.monsters && d.monsters.length > 0 && (
               <div style={{ marginTop: '10px', borderTop: '1px solid rgba(148,163,184,0.15)', paddingTop: '10px' }}>
