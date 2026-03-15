@@ -97,7 +97,7 @@ function NavIcon({ type, active }: { type: string; active?: boolean }) {
 
 const navItems = [
   { href: '/shop', label: '상점', iconType: 'shop' },
-  { href: '/dashboard', label: '전투', iconType: 'home' },
+  { href: '/dashboard', label: '게이트', iconType: 'home' },
   { href: '/inventory', label: '인벤토리', iconType: 'inventory' },
   { href: '/channel', label: '채널', iconType: 'channel' },
 ];

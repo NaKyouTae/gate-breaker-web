@@ -131,6 +131,7 @@ function BattleContent() {
   const [bagItems, setBagItems] = useState<InventoryItem[]>([]);
   const [bagLoading, setBagLoading] = useState(false);
   const [usingItem, setUsingItem] = useState(false);
+  const [equippedWeapon, setEquippedWeapon] = useState<InventoryItem | null>(null);
   const [autoAttack, setAutoAttack] = useState(false);
   const autoAttackRef = useRef(false);
   autoAttackRef.current = autoAttack;
@@ -237,7 +238,15 @@ function BattleContent() {
         setLoading(false);
       }
     }
+    async function fetchEquippedWeapon() {
+      try {
+        const items = await inventoryApi.list();
+        const weapon = items.find((i: InventoryItem) => i.item.type === 'WEAPON' && i.isEquipped);
+        setEquippedWeapon(weapon || null);
+      } catch { /* ignore */ }
+    }
     fetchStatus();
+    fetchEquippedWeapon();
   }, [isAuthenticated, router, addToast]);
 
   // Periodic health check
@@ -536,18 +545,15 @@ function BattleContent() {
   const handleUseItem = useCallback(async () => {
     if (usingItem || !session || session.result) return;
     setUsingItem(true);
-    const prevPlayerHp = session.playerHp;
     try {
-      await battleApi.item();
+      const itemResult = await battleApi.item();
       const updated = await battleApi.status();
-
-      const healAmount = updated.playerHp - prevPlayerHp;
 
       setSession(updated);
       setShowBagModal(false);
 
-      if (healAmount > 0) {
-        addToast(`HP가 ${healAmount} 회복되었습니다!`, 'success');
+      if (itemResult.healAmount && itemResult.healAmount > 0) {
+        addToast(`HP가 ${itemResult.healAmount} 회복되었습니다!`, 'success');
       }
 
       // Refresh bag items
@@ -919,7 +925,8 @@ function BattleContent() {
           <div
             style={{
               position: 'relative',
-              width: '60px', height: '60px',
+              width: '140px', height: '140px',
+              marginBottom: '-20px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: '32px',
               filter: 'drop-shadow(0 0 8px rgba(167,139,250,0.4))',
@@ -928,7 +935,18 @@ function BattleContent() {
                 : playerHitFlash ? 'playerHitFlash 0.5s ease-out' : undefined,
             }}
           >
-            ⚔️
+            {equippedWeapon?.item.imageUrl ? (
+              <img
+                src={equippedWeapon.item.imageUrl}
+                alt={equippedWeapon.item.name}
+                style={{
+                  width: '130px',
+                  height: '130px',
+                  objectFit: 'contain',
+                  borderRadius: '8px',
+                }}
+              />
+            ) : '⚔️'}
             {playerDamageNumber !== null && (
               <div
                 style={{
@@ -953,6 +971,7 @@ function BattleContent() {
           <div
             style={{
               flex: 1,
+              maxWidth: '65%',
               background: 'rgba(17, 18, 40, 0.75)',
               border: playerHitFlash ? '1.5px solid rgba(233,69,96,0.6)' : '1.5px solid rgba(167, 139, 250, 0.2)',
               borderRadius: '12px',
@@ -1180,7 +1199,7 @@ function BattleContent() {
                     display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0,
                   }}>
                     {inv.item.imageUrl ? (
-                      <img src={inv.item.imageUrl} alt={inv.item.name} style={{ width: '28px', height: '28px', objectFit: 'cover', borderRadius: '4px' }} />
+                      <img src={inv.item.imageUrl} alt={inv.item.name} style={{ width: '28px', height: '28px', objectFit: 'contain', borderRadius: '4px' }} />
                     ) : '🧪'}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>

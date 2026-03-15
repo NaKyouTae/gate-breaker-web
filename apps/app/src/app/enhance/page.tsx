@@ -106,7 +106,7 @@ export default function EnhancePage() {
                     <img
                       src={inv.item.imageUrl}
                       alt={inv.item.name}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      style={{ width: '85%', height: '85%', objectFit: 'contain' }}
                     />
                   ) : (
                     'NO IMG'

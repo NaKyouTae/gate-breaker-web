@@ -222,7 +222,7 @@ export const battle = {
       goldGained?: number;
     }>('/battle/skill', { method: 'POST' }),
   item: () =>
-    request<BattleLogEntry>('/battle/item', { method: 'POST' }),
+    request<BattleLogEntry & { healAmount?: number }>('/battle/item', { method: 'POST' }),
   escape: () =>
     request<{ result: string; rewards: unknown }>('/battle/escape', {
       method: 'POST',
@@ -389,6 +389,10 @@ export const admin = {
       uploadFile<Item>(`/admin/items/${id}/image`, file),
     deleteImage: (id: string) =>
       request<Item>(`/admin/items/${id}/image`, { method: 'DELETE' }),
+    uploadBattleImage: (id: string, file: File) =>
+      uploadFile<Item>(`/admin/items/${id}/battle-image`, file),
+    deleteBattleImage: (id: string) =>
+      request<Item>(`/admin/items/${id}/battle-image`, { method: 'DELETE' }),
   },
   shop: {
     list: () => request<Item[]>('/admin/shop'),

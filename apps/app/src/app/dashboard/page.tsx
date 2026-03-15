@@ -259,7 +259,7 @@ function DashboardContent() {
             cursor: equippedWeapon ? 'default' : 'pointer',
           }}
         >
-          <div style={{ position: 'relative', width: 86, height: 86, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ position: 'relative', width: 240, height: 240, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: -40 }}>
             <div
               style={{
                 position: 'absolute',
@@ -270,119 +270,32 @@ function DashboardContent() {
                   : 'radial-gradient(circle, rgba(148,163,184,0.18) 0%, transparent 68%)',
               }}
             />
-            <div style={{ position: 'relative', width: 62, height: 66, transform: 'rotate(-28deg)' }}>
-              <div
+            {equippedWeapon?.item.imageUrl ? (
+              <img
+                src={equippedWeapon.item.imageUrl}
+                alt={equippedWeapon.item.name}
                 style={{
-                  position: 'absolute',
-                  left: 28,
-                  top: 2,
-                  width: 9,
-                  height: 41,
-                  borderRadius: '4px 4px 8px 8px',
-                  background: equippedWeapon
-                    ? 'linear-gradient(160deg, #f8fafc 0%, #cbd5e1 42%, #7c8ba1 100%)'
-                    : 'linear-gradient(160deg, #9ca3af 0%, #6b7280 42%, #4b5563 100%)',
-                  boxShadow: 'inset -2px 0 0 rgba(0,0,0,0.28)',
+                  width: 220,
+                  height: 220,
+                  objectFit: 'contain',
+                  borderRadius: 16,
+                  filter: 'drop-shadow(0 0 16px rgba(167,139,250,0.5))',
                 }}
               />
-              <div
-                style={{
-                  position: 'absolute',
-                  left: 37,
-                  top: 4,
-                  width: 3,
-                  height: 40,
-                  borderRadius: 2,
-                  background: equippedWeapon ? 'rgba(248,250,252,0.85)' : 'rgba(209,213,219,0.6)',
-                  opacity: 0.75,
-                }}
-              />
-              <div
-                style={{
-                  position: 'absolute',
-                  left: 29,
-                  top: 2,
-                  width: 4,
-                  height: 40,
-                  borderRadius: 2,
-                  background: equippedWeapon ? 'rgba(148,163,184,0.55)' : 'rgba(75,85,99,0.55)',
-                }}
-              />
-              <div
-                style={{
-                  position: 'absolute',
-                  left: 24,
-                  top: 42,
-                  width: 18,
-                  height: 6,
-                  borderRadius: 4,
-                  background: equippedWeapon
-                    ? 'linear-gradient(180deg, #d6c3ff 0%, #7c3aed 100%)'
-                    : 'linear-gradient(180deg, #9ca3af 0%, #6b7280 100%)',
-                  boxShadow: '0 2px 7px rgba(0,0,0,0.4)',
-                }}
-              />
-              <div
-                style={{
-                  position: 'absolute',
-                  left: 29,
-                  top: 48,
-                  width: 8,
-                  height: 13,
-                  borderRadius: 4,
-                  background: equippedWeapon
-                    ? 'linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%)'
-                    : 'linear-gradient(180deg, #6b7280 0%, #4b5563 100%)',
-                }}
-              />
-              <div
-                style={{
-                  position: 'absolute',
-                  left: 28,
-                  top: 0,
-                  width: 8,
-                  height: 43,
-                  overflow: 'hidden',
-                }}
-              >
-                <div
-                  style={{
-                    width: 14,
-                    height: 43,
-                    background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.7) 50%, transparent 100%)',
-                    animation: equippedWeapon ? 'bladeShine 2.2s ease-in-out infinite' : 'none',
-                  }}
-                />
-              </div>
-            </div>
+            ) : (
+              <div style={{ fontSize: 80, filter: 'drop-shadow(0 0 8px rgba(148,163,184,0.3))' }}>⚔️</div>
+            )}
           </div>
           <div style={{ textAlign: 'center' }}>
             {equippedWeapon ? (
-              <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#a78bfa', textShadow: '0 0 8px rgba(167,139,250,0.4)' }}>
+              <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#a78bfa', textShadow: '0 0 8px rgba(167,139,250,0.4)' }}>
+                <span style={{ color: '#fbbf24', marginRight: 6 }}>+{equippedWeapon.enhanceLevel}</span>
                 {equippedWeapon.item.name}
-                {equippedWeapon.enhanceLevel > 0 && (
-                  <span style={{ color: '#fbbf24', marginLeft: 4 }}>+{equippedWeapon.enhanceLevel}</span>
-                )}
               </div>
             ) : (
               <div style={{ fontSize: '0.68rem', color: '#737b8f', textAlign: 'center', lineHeight: 1.45 }}>
                 <div>빈 검</div>
                 <div style={{ fontSize: '0.58rem', color: '#565f73', marginTop: 2 }}>탭해서 무기 장착</div>
-              </div>
-            )}
-            {equippedWeapon?.item.imageUrl && (
-              <div style={{ marginTop: 6 }}>
-                <img
-                  src={equippedWeapon.item.imageUrl}
-                  alt={equippedWeapon.item.name}
-                  style={{
-                    width: 22,
-                    height: 22,
-                    borderRadius: 6,
-                    border: `1px solid ${getEnhanceColor(equippedWeapon.enhanceLevel).color}88`,
-                    objectFit: 'cover',
-                  }}
-                />
               </div>
             )}
             {!equippedWeapon && (

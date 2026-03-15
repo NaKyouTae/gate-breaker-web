@@ -67,7 +67,11 @@
       "Bash(grep -r \"updateGold\\\\|modifyGold\\\\|addGold\" /Users/nakyutae/personal/git/gate-breaker/gate-breaker-server/src --include=*.ts)",
       "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web -type f \\\\\\(-name *chat* -o -name *room* -o -name *channel* -o -name *message* \\\\\\))",
       "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web -type f \\\\\\(-name *socket* -o -name *websocket* -o -name *lobby* \\\\\\))",
-      "Bash(node -e \":*)"
+      "Bash(node -e \":*)",
+      "Bash(grep -r \"item-box\\\\|IMG\" /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/app/src --include=*.css --include=*.scss)",
+      "Bash(grep -r \"uploadImage\\\\|admin.*item\\\\|admin.*weapon\" /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/app/src --include=*.tsx --include=*.ts)",
+      "Bash(find /Users/nakyutae/personal/git/gate-breaker -name .env* -type f)",
+      "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-server/src -type f \\\\\\(-name *.ts -o -name *.kt \\\\\\))"
     ],
     "additionalDirectories": [
       "/Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/admin/.next",

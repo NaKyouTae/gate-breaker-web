@@ -70,6 +70,7 @@ export interface Item {
   baseHp: number;
   healHp: number;
   imageUrl?: string | null;
+  battleImageUrl?: string | null;
   sellPrice: number;
   buyPrice?: number;
 }

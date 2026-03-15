@@ -3,7 +3,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { enhance } from '@gate-breaker/api-client';
 import type { EnhanceInfo, EnhanceResult, InventoryItem } from '@gate-breaker/types';
-import { Badge, Spinner } from '@gate-breaker/ui';
+import { Spinner } from '@gate-breaker/ui';
 import { EnhanceEffect, type EnhanceEffectType } from '@/components/enhance-effect';
 import { FullscreenOverlay } from '@/components/fullscreen-overlay';
 import { getEnhanceColor } from '@/lib/enhance-color';
@@ -12,25 +12,25 @@ import { ENHANCE_STONES, getStoneConfig } from '@/lib/enhance-stone';
 /** 강화 등급표 — enhance.defaults.ts 와 동기화 */
 const ENHANCE_GRADE_TABLE: { level: number; successRate: number; maintainRate: number; downgradeRate: number; destroyRate: number }[] = [
   { level: 1,  successRate: 95,  maintainRate: 5,  downgradeRate: 0,  destroyRate: 0 },
-  { level: 2,  successRate: 80,  maintainRate: 20, downgradeRate: 0,  destroyRate: 0 },
-  { level: 3,  successRate: 70,  maintainRate: 30, downgradeRate: 0,  destroyRate: 0 },
-  { level: 4,  successRate: 60,  maintainRate: 40, downgradeRate: 0,  destroyRate: 0 },
-  { level: 5,  successRate: 50,  maintainRate: 50, downgradeRate: 0,  destroyRate: 0 },
-  { level: 6,  successRate: 40,  maintainRate: 60, downgradeRate: 0,  destroyRate: 0 },
-  { level: 7,  successRate: 30,  maintainRate: 70, downgradeRate: 0,  destroyRate: 0 },
-  { level: 8,  successRate: 25,  maintainRate: 75, downgradeRate: 0,  destroyRate: 0 },
-  { level: 9,  successRate: 20,  maintainRate: 80, downgradeRate: 0,  destroyRate: 0 },
-  { level: 10, successRate: 15,  maintainRate: 85, downgradeRate: 0,  destroyRate: 0 },
-  { level: 11, successRate: 20,  maintainRate: 50, downgradeRate: 30, destroyRate: 0 },
-  { level: 12, successRate: 17,  maintainRate: 45, downgradeRate: 38, destroyRate: 0 },
-  { level: 13, successRate: 14,  maintainRate: 40, downgradeRate: 46, destroyRate: 0 },
-  { level: 14, successRate: 11,  maintainRate: 37, downgradeRate: 52, destroyRate: 0 },
-  { level: 15, successRate: 9,   maintainRate: 33, downgradeRate: 58, destroyRate: 0 },
-  { level: 16, successRate: 7,   maintainRate: 30, downgradeRate: 63, destroyRate: 0 },
-  { level: 17, successRate: 5,   maintainRate: 25, downgradeRate: 70, destroyRate: 0 },
-  { level: 18, successRate: 4,   maintainRate: 21, downgradeRate: 72, destroyRate: 3 },
-  { level: 19, successRate: 3,   maintainRate: 17, downgradeRate: 76, destroyRate: 4 },
-  { level: 20, successRate: 2,   maintainRate: 13, downgradeRate: 80, destroyRate: 5 },
+  { level: 2,  successRate: 85,  maintainRate: 15, downgradeRate: 0,  destroyRate: 0 },
+  { level: 3,  successRate: 75,  maintainRate: 25, downgradeRate: 0,  destroyRate: 0 },
+  { level: 4,  successRate: 65,  maintainRate: 35, downgradeRate: 0,  destroyRate: 0 },
+  { level: 5,  successRate: 55,  maintainRate: 45, downgradeRate: 0,  destroyRate: 0 },
+  { level: 6,  successRate: 45,  maintainRate: 55, downgradeRate: 0,  destroyRate: 0 },
+  { level: 7,  successRate: 38,  maintainRate: 62, downgradeRate: 0,  destroyRate: 0 },
+  { level: 8,  successRate: 32,  maintainRate: 68, downgradeRate: 0,  destroyRate: 0 },
+  { level: 9,  successRate: 27,  maintainRate: 73, downgradeRate: 0,  destroyRate: 0 },
+  { level: 10, successRate: 22,  maintainRate: 78, downgradeRate: 0,  destroyRate: 0 },
+  { level: 11, successRate: 25,  maintainRate: 55, downgradeRate: 20, destroyRate: 0 },
+  { level: 12, successRate: 22,  maintainRate: 53, downgradeRate: 25, destroyRate: 0 },
+  { level: 13, successRate: 19,  maintainRate: 51, downgradeRate: 30, destroyRate: 0 },
+  { level: 14, successRate: 16,  maintainRate: 49, downgradeRate: 35, destroyRate: 0 },
+  { level: 15, successRate: 13,  maintainRate: 47, downgradeRate: 40, destroyRate: 0 },
+  { level: 16, successRate: 10,  maintainRate: 45, downgradeRate: 45, destroyRate: 0 },
+  { level: 17, successRate: 8,   maintainRate: 40, downgradeRate: 52, destroyRate: 0 },
+  { level: 18, successRate: 6,   maintainRate: 35, downgradeRate: 57, destroyRate: 2 },
+  { level: 19, successRate: 5,   maintainRate: 30, downgradeRate: 62, destroyRate: 3 },
+  { level: 20, successRate: 4,   maintainRate: 25, downgradeRate: 66, destroyRate: 5 },
 ];
 
 function formatFailurePenalty(penalty: string, currentLevel: number): string {
@@ -189,68 +189,50 @@ export function EnhanceView({ item, gold, stones = [], onClose, onComplete }: En
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
+          justifyContent: 'safe center',
           position: 'relative',
           zIndex: 101,
-          overflow: 'hidden',
+          overflowY: 'auto',
+          overflowX: 'hidden',
           padding: '0 24px',
+          WebkitOverflowScrolling: 'touch',
+          minHeight: 0,
         }}>
           {/* Equipment icon + name + level */}
           <div style={{
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            marginBottom: 20,
+            marginBottom: 16,
+            flexShrink: 0,
           }}>
             <div
               ref={iconRef}
               style={{
-                width: 100,
-                height: 100,
-                borderRadius: '50%',
-                background: `radial-gradient(circle, ${rarityGlow} 0%, transparent 70%)`,
+                width: 140,
+                height: 140,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                position: 'relative',
+                filter: `drop-shadow(0 0 12px ${rarityGlow})`,
               }}
             >
-              <div style={{
-                position: 'absolute',
-                inset: 0,
-                borderRadius: '50%',
-                border: `2px solid ${rarityColor}`,
-                opacity: 0.3,
-              }} />
-              <div style={{
-                width: 72,
-                height: 72,
-                borderRadius: '50%',
-                background: 'rgba(15, 15, 23, 0.9)',
-                border: `2px solid ${rarityColor}`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: `0 0 30px ${rarityGlow}, inset 0 0 20px rgba(0,0,0,0.5)`,
-                overflow: 'hidden',
-              }}>
-                {enhanceItem.item.imageUrl ? (
-                  <img
-                    src={enhanceItem.item.imageUrl}
-                    alt={enhanceItem.item.name}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  />
-                ) : (
-                  <span style={{ fontSize: 10, color: '#667085' }}>IMG</span>
-                )}
-              </div>
+              {enhanceItem.item.imageUrl ? (
+                <img
+                  src={enhanceItem.item.imageUrl}
+                  alt={enhanceItem.item.name}
+                  style={{ width: '130px', height: '130px', objectFit: 'contain', ...(enhanceItem.item.type === 'WEAPON' ? { borderRadius: '8px' } : {}) }}
+                />
+              ) : (
+                <span style={{ fontSize: 10, color: '#667085' }}>IMG</span>
+              )}
             </div>
 
             <div style={{
               color: rarityColor,
-              fontSize: '1.2rem',
+              fontSize: '1.1rem',
               fontWeight: 800,
-              marginTop: 12,
+              marginTop: 8,
               letterSpacing: '0.5px',
               textShadow: `0 0 20px ${rarityGlow}`,
             }}>
@@ -258,18 +240,13 @@ export function EnhanceView({ item, gold, stones = [], onClose, onComplete }: En
             </div>
             <div style={{
               color: '#eee',
-              fontSize: '1.6rem',
+              fontSize: '1.4rem',
               fontWeight: 900,
               marginTop: 2,
               letterSpacing: '2px',
             }}>
               +{enhanceItem.enhanceLevel}
             </div>
-            {enhanceItem.isEquipped && (
-              <div style={{ marginTop: 4 }}>
-                <Badge variant="success">장착중</Badge>
-              </div>
-            )}
           </div>
 
           {/* Enhancement info + stat changes */}
@@ -422,7 +399,8 @@ export function EnhanceView({ item, gold, stones = [], onClose, onComplete }: En
             <div style={{
               width: '100%',
               maxWidth: 420,
-              marginTop: 16,
+              marginTop: 12,
+              flexShrink: 0,
             }}>
               <div style={{ fontSize: 11, color: '#999', marginBottom: 6, fontWeight: 600 }}>강화석</div>
               <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>

@@ -4,25 +4,25 @@ const PER_LEVEL = 1.5;
 /** 강화 확률 테이블 (%) — enhance.defaults.ts 와 동기화 */
 const RATES: { successRate: number; downgradeRate: number; destroyRate: number }[] = [
   { successRate: 95,  downgradeRate: 0,  destroyRate: 0 },  // 0→1
-  { successRate: 80,  downgradeRate: 0,  destroyRate: 0 },  // 1→2
-  { successRate: 70,  downgradeRate: 0,  destroyRate: 0 },  // 2→3
-  { successRate: 60,  downgradeRate: 0,  destroyRate: 0 },  // 3→4
-  { successRate: 50,  downgradeRate: 0,  destroyRate: 0 },  // 4→5
-  { successRate: 40,  downgradeRate: 0,  destroyRate: 0 },  // 5→6
-  { successRate: 30,  downgradeRate: 0,  destroyRate: 0 },  // 6→7
-  { successRate: 25,  downgradeRate: 0,  destroyRate: 0 },  // 7→8
-  { successRate: 20,  downgradeRate: 0,  destroyRate: 0 },  // 8→9
-  { successRate: 15,  downgradeRate: 0,  destroyRate: 0 },  // 9→10
-  { successRate: 20,  downgradeRate: 30, destroyRate: 0 },  // 10→11
-  { successRate: 17,  downgradeRate: 38, destroyRate: 0 },  // 11→12
-  { successRate: 14,  downgradeRate: 46, destroyRate: 0 },  // 12→13
-  { successRate: 11,  downgradeRate: 52, destroyRate: 0 },  // 13→14
-  { successRate: 9,   downgradeRate: 58, destroyRate: 0 },  // 14→15
-  { successRate: 7,   downgradeRate: 63, destroyRate: 0 },  // 15→16
-  { successRate: 5,   downgradeRate: 70, destroyRate: 0 },  // 16→17
-  { successRate: 4,   downgradeRate: 72, destroyRate: 3 },  // 17→18
-  { successRate: 3,   downgradeRate: 76, destroyRate: 4 },  // 18→19
-  { successRate: 2,   downgradeRate: 80, destroyRate: 5 },  // 19→20
+  { successRate: 85,  downgradeRate: 0,  destroyRate: 0 },  // 1→2
+  { successRate: 75,  downgradeRate: 0,  destroyRate: 0 },  // 2→3
+  { successRate: 65,  downgradeRate: 0,  destroyRate: 0 },  // 3→4
+  { successRate: 55,  downgradeRate: 0,  destroyRate: 0 },  // 4→5
+  { successRate: 45,  downgradeRate: 0,  destroyRate: 0 },  // 5→6
+  { successRate: 38,  downgradeRate: 0,  destroyRate: 0 },  // 6→7
+  { successRate: 32,  downgradeRate: 0,  destroyRate: 0 },  // 7→8
+  { successRate: 27,  downgradeRate: 0,  destroyRate: 0 },  // 8→9
+  { successRate: 22,  downgradeRate: 0,  destroyRate: 0 },  // 9→10
+  { successRate: 25,  downgradeRate: 20, destroyRate: 0 },  // 10→11
+  { successRate: 22,  downgradeRate: 25, destroyRate: 0 },  // 11→12
+  { successRate: 19,  downgradeRate: 30, destroyRate: 0 },  // 12→13
+  { successRate: 16,  downgradeRate: 35, destroyRate: 0 },  // 13→14
+  { successRate: 13,  downgradeRate: 40, destroyRate: 0 },  // 14→15
+  { successRate: 10,  downgradeRate: 45, destroyRate: 0 },  // 15→16
+  { successRate: 8,   downgradeRate: 52, destroyRate: 0 },  // 16→17
+  { successRate: 6,   downgradeRate: 57, destroyRate: 2 },  // 17→18
+  { successRate: 5,   downgradeRate: 62, destroyRate: 3 },  // 18→19
+  { successRate: 4,   downgradeRate: 66, destroyRate: 5 },  // 19→20
 ];
 
 /** 레벨별 누적 기대 비용 (캐시) */

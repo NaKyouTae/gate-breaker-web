@@ -187,22 +187,15 @@ function InventoryContent() {
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 24px' }}>
             {/* Item Image */}
             <div style={{
-              marginTop: 16, marginBottom: 20, width: 120, height: 120, borderRadius: '50%',
-              background: `radial-gradient(circle, ${rarityGlow} 0%, transparent 70%)`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative',
+              marginTop: 16, marginBottom: 20, width: 140, height: 140,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              filter: `drop-shadow(0 0 12px ${rarityGlow})`,
             }}>
-              <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: `2px solid ${rarityColor}`, opacity: 0.3 }} />
-              <div style={{
-                width: 88, height: 88, borderRadius: '50%', background: 'rgba(15, 15, 23, 0.9)',
-                border: `2px solid ${rarityColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: `0 0 30px ${rarityGlow}, inset 0 0 20px rgba(0,0,0,0.5)`, overflow: 'hidden',
-              }}>
-                {detailItem.item.imageUrl ? (
-                  <img src={detailItem.item.imageUrl} alt={detailItem.item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                  <span style={{ fontSize: 10, color: '#667085' }}>IMG</span>
-                )}
-              </div>
+              {detailItem.item.imageUrl ? (
+                <img src={detailItem.item.imageUrl} alt={detailItem.item.name} style={{ width: '130px', height: '130px', objectFit: 'contain', ...(detailItem.item.type === 'WEAPON' ? { borderRadius: '8px' } : {}) }} />
+              ) : (
+                <span style={{ fontSize: 10, color: '#667085' }}>IMG</span>
+              )}
             </div>
 
             {/* Name & Type */}

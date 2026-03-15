@@ -99,6 +99,7 @@ export default function ItemsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editing, setEditing] = useState<ItemForm>(EMPTY_FORM);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
+
   const [searchText, setSearchText] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('전체');
 
@@ -226,6 +227,7 @@ export default function ItemsPage() {
       setUploadingId(null);
     }
   };
+
 
   const getCategoryLabel = useCallback(
     (item: Item) => {
@@ -365,6 +367,7 @@ export default function ItemsPage() {
                   >
                     {/* 헤더: 이미지 + 이름 + 액션 */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                      {/* 아이템 이미지 (정사각형) */}
                       <div style={{ position: 'relative', flexShrink: 0, width: 56, height: 56 }}>
                         {isUploading ? (
                           <div style={{ width: 56, height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#2a2a4a', borderRadius: 8 }}>

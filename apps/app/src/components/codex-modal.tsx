@@ -330,7 +330,7 @@ function CodexItemDetailView({ id, onMonsterClick }: { id: string; onMonsterClic
         <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
           <div style={{ width: 88, height: 88, borderRadius: '12px', border: `1px solid ${rarityColor}44`, overflow: 'hidden', background: '#0a0a15', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, filter: item.discovered ? 'none' : 'grayscale(1) brightness(0.3)' }}>
             {item.imageUrl ? (
-              <img src={item.imageUrl} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={item.imageUrl} alt={item.name} style={{ width: '85%', height: '85%', objectFit: 'contain' }} />
             ) : (
               <span style={{ fontSize: '12px', color: '#444' }}>NO IMG</span>
             )}
@@ -526,7 +526,7 @@ function CodexMonsterDetailView({ id, onItemClick }: { id: string; onItemClick: 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', background: 'rgba(0,0,0,0.3)', borderRadius: '8px' }}>
                   <div style={{ width: 36, height: 36, borderRadius: '8px', border: `1px solid ${RARITY_COLORS[drop.itemRarity]}33`, overflow: 'hidden', background: '#0a0a15', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     {drop.itemImageUrl ? (
-                      <img src={drop.itemImageUrl} alt={drop.itemName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <img src={drop.itemImageUrl} alt={drop.itemName} style={{ width: '85%', height: '85%', objectFit: 'contain' }} />
                     ) : (
                       <span style={{ fontSize: '8px', color: '#444' }}>IMG</span>
                     )}
