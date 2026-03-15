@@ -105,12 +105,10 @@ export default function DungeonListPage() {
   const handleEnter = async (dungeonId: string) => {
     setEnteringId(dungeonId);
     try {
-      await dungeonApi.enter(dungeonId);
+      await dungeonApi.enter(dungeonId, 0);
       const dg = dungeons.find(dd => dd.id === dungeonId);
-      const minLv = dg?.minLevel ?? 1;
-      const maxLv = dg?.maxLevel ?? 1;
       const dgName = dg?.name ?? '';
-      router.push(`/battle?dungeonId=${dungeonId}&minLv=${minLv}&maxLv=${maxLv}&dgName=${encodeURIComponent(dgName)}`);
+      router.push(`/battle?dungeonId=${dungeonId}&dgName=${encodeURIComponent(dgName)}`);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '던전 입장에 실패했습니다.';
       addToast(message, 'error');

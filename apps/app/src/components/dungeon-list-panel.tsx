@@ -89,7 +89,7 @@ export function DungeonListPanel({
       )}
 
       {dungeons.map((d) => {
-        const canEnter = userLevel >= d.minLevel && userLevel <= d.maxLevel;
+        const canEnter = true;
         const isEntering = enteringId === d.id;
 
         return (
@@ -148,18 +148,12 @@ export function DungeonListPanel({
                     textShadow: '0 0 10px rgba(199, 210, 254, 0.18)',
                   }}
                 >
-                  입장 레벨 Lv.{d.minLevel} ~ {d.maxLevel}
+                  적정 레벨 Lv.{d.minLevel} ~ {d.maxLevel}
                 </span>
               </div>
-              {canEnter ? (
-                <span style={{ fontSize: '12px', color: isEntering ? '#f8fafc' : '#a78bfa', fontWeight: 700 }}>
-                  {isEntering ? '입장 중...' : '입장 가능'}
-                </span>
-              ) : (
-                <span style={{ fontSize: '12px', color: '#fca5a5', fontWeight: 700 }}>
-                  레벨 부족
-                </span>
-              )}
+              <span style={{ fontSize: '12px', color: isEntering ? '#f8fafc' : '#a78bfa', fontWeight: 700 }}>
+                {isEntering ? '입장 중...' : '입장 가능'}
+              </span>
             </div>
 
             <div
@@ -180,6 +174,66 @@ export function DungeonListPanel({
                 </span>
               </span>
             </div>
+
+            {d.monsters && d.monsters.length > 0 && (
+              <div style={{ marginTop: '10px', borderTop: '1px solid rgba(148,163,184,0.15)', paddingTop: '10px' }}>
+                <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '6px', fontWeight: 600 }}>
+                  출현 몬스터
+                </div>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {d.monsters.map((m) => (
+                    <div
+                      key={m.id}
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '4px',
+                        width: '48px',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '8px',
+                          background: 'rgba(79, 70, 229, 0.18)',
+                          border: '1px solid rgba(129, 140, 248, 0.3)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          overflow: 'hidden',
+                        }}
+                      >
+                        {m.imageUrl ? (
+                          <img
+                            src={m.imageUrl}
+                            alt={m.name}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                        ) : (
+                          <span style={{ fontSize: '16px' }}>👹</span>
+                        )}
+                      </div>
+                      <span
+                        style={{
+                          fontSize: '10px',
+                          color: '#c4b5fd',
+                          textAlign: 'center',
+                          lineHeight: '1.2',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          width: '100%',
+                        }}
+                      >
+                        {m.name}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         );
       })}

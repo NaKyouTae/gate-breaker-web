@@ -7,20 +7,13 @@ import type { User, Dungeon, InventoryItem } from '@gate-breaker/types';
 import { Spinner, Modal, useToast } from '@gate-breaker/ui';
 import { useAuth } from '@/context/auth-context';
 import { DungeonListPanel, type OngoingBattleInfo } from '@/components/dungeon-list-panel';
+import { getEnhanceColor } from '@/lib/enhance-color';
 
 interface SavedDungeonProgress {
   dungeonId: string;
   totalMonsters: number;
   currentMonsterIndex: number;
 }
-
-const RARITY_GLOW: Record<string, string> = {
-  COMMON: '#94a3b8',
-  RARE: '#60a5fa',
-  EPIC: '#a78bfa',
-  LEGENDARY: '#f59e0b',
-  MYTHIC: '#f43f5e',
-};
 
 function getSavedDungeonProgress(): SavedDungeonProgress | null {
   if (typeof window === 'undefined') return null;
@@ -176,13 +169,11 @@ function DashboardContent() {
   const handleEnterDungeon = async (dungeonId: string) => {
     setEnteringId(dungeonId);
     try {
-      await dungeonApi.enter(dungeonId);
+      await dungeonApi.enter(dungeonId, 0);
       const dg = dungeons.find(dd => dd.id === dungeonId);
-      const minLv = dg?.minLevel ?? 1;
-      const maxLv = dg?.maxLevel ?? 1;
       const dgName = dg?.name ?? '';
       setDungeonModalOpen(false);
-      router.push(`/battle?dungeonId=${dungeonId}&minLv=${minLv}&maxLv=${maxLv}&dgName=${encodeURIComponent(dgName)}`);
+      router.push(`/battle?dungeonId=${dungeonId}&dgName=${encodeURIComponent(dgName)}`);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '던전 입장에 실패했습니다.';
       addToast(message, 'error');
@@ -275,7 +266,7 @@ function DashboardContent() {
                 inset: 0,
                 borderRadius: '50%',
                 background: equippedWeapon
-                  ? `radial-gradient(circle, ${RARITY_GLOW[equippedWeapon.item.rarity] || '#a78bfa'}38 0%, transparent 68%)`
+                  ? `radial-gradient(circle, ${getEnhanceColor(equippedWeapon.enhanceLevel).glow} 0%, transparent 68%)`
                   : 'radial-gradient(circle, rgba(148,163,184,0.18) 0%, transparent 68%)',
               }}
             />
@@ -388,7 +379,7 @@ function DashboardContent() {
                     width: 22,
                     height: 22,
                     borderRadius: 6,
-                    border: `1px solid ${(RARITY_GLOW[equippedWeapon.item.rarity] || '#a78bfa')}88`,
+                    border: `1px solid ${getEnhanceColor(equippedWeapon.enhanceLevel).color}88`,
                     objectFit: 'cover',
                   }}
                 />

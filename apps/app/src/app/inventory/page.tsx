@@ -7,23 +7,8 @@ import { Badge, Spinner, useToast } from '@gate-breaker/ui';
 import { useAuth } from '@/context/auth-context';
 import { EnhanceView } from '@/components/enhance-view';
 import { FullscreenOverlay } from '@/components/fullscreen-overlay';
-import type { InventoryItem, ItemType, ItemRarity } from '@gate-breaker/types';
-
-const RARITY_COLORS: Record<ItemRarity, string> = {
-  COMMON: '#888',
-  RARE: '#4a9eff',
-  EPIC: '#b048f8',
-  LEGENDARY: '#ff8c00',
-  MYTHIC: '#ff2d55',
-};
-
-const RARITY_GLOW: Record<ItemRarity, string> = {
-  COMMON: 'rgba(136,136,136,0.3)',
-  RARE: 'rgba(74,158,255,0.4)',
-  EPIC: 'rgba(176,72,248,0.4)',
-  LEGENDARY: 'rgba(255,140,0,0.5)',
-  MYTHIC: 'rgba(255,45,85,0.5)',
-};
+import { getEnhanceColor } from '@/lib/enhance-color';
+import type { InventoryItem, ItemType } from '@gate-breaker/types';
 
 const TYPE_LABELS: Record<ItemType, string> = {
   WEAPON: '무기',
@@ -164,8 +149,7 @@ function InventoryContent() {
 
   // ===== Full-screen Detail View =====
   if (detailItem) {
-    const rarityColor = RARITY_COLORS[detailItem.item.rarity];
-    const rarityGlow = RARITY_GLOW[detailItem.item.rarity];
+    const { color: rarityColor, glow: rarityGlow } = getEnhanceColor(detailItem.enhanceLevel);
     const isWeapon = detailItem.item.type === 'WEAPON';
 
     return (
@@ -344,7 +328,7 @@ function InventoryContent() {
       {filtered.length === 0 ? (
         <div style={{ color: '#555', padding: '40px 0', textAlign: 'center' }}>아이템이 없습니다.</div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
           {filtered.map((inv) => (
             <div key={inv.id} onClick={() => setDetailItem(inv)} style={{
               cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -352,9 +336,10 @@ function InventoryContent() {
               <div
                 className="item-box"
                 style={{
-                  borderColor: inv.isEquipped ? RARITY_COLORS[inv.item.rarity] : `${RARITY_COLORS[inv.item.rarity]}25`,
+                  borderColor: inv.isEquipped ? getEnhanceColor(inv.enhanceLevel).color : `${getEnhanceColor(inv.enhanceLevel).color}25`,
                   borderWidth: inv.isEquipped ? '2px' : '1.5px',
-                  boxShadow: inv.isEquipped ? `0 0 12px ${RARITY_COLORS[inv.item.rarity]}40` : 'none',
+                  boxShadow: inv.isEquipped ? `0 0 12px ${getEnhanceColor(inv.enhanceLevel).glow}` : 'none',
+                  borderRadius: '8px',
                 }}
               >
                 {inv.item.imageUrl ? (
@@ -379,7 +364,7 @@ function InventoryContent() {
                   </div>
                 )}
               </div>
-              <span className="item-name" style={{ color: RARITY_COLORS[inv.item.rarity] }}>
+              <span className="item-name" style={{ color: getEnhanceColor(inv.enhanceLevel).color, fontSize: '0.6rem' }}>
                 {inv.item.name}
               </span>
             </div>

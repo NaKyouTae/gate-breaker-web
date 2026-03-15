@@ -53,7 +53,9 @@
       "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-server/src -name *bootstrap* -o -name *main*)",
       "Bash(wc -l /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/app/src/app/channel/[id]/page.tsx)",
       "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/app/src -type f \\\\\\(-name *profile* -o -name *modal* -o -name *header* \\\\\\))",
-      "Bash(wc -l apps/app/src/app/channel/\\\\[id\\\\]/page.tsx)"
+      "Bash(wc -l apps/app/src/app/channel/\\\\[id\\\\]/page.tsx)",
+      "Bash(grep -r \"dungeon\\\\|monster\\\\|Dungeon\\\\|Monster\" /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/admin --include=*.tsx --include=*.ts -l)",
+      "Bash(grep -r \"item-box\\\\|item-name\\\\|item-price\" /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps --include=*.tsx --include=*.ts --include=*.css)"
     ],
     "additionalDirectories": [
       "/Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/admin/.next",

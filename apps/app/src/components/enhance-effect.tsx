@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 
-export type EnhanceEffectType = 'success' | 'failure';
+export type EnhanceEffectType = 'success' | 'failure' | 'enhancing';
 
 interface EnhanceEffectProps {
   type: EnhanceEffectType;
@@ -360,8 +360,112 @@ export function EnhanceEffect({ type, onComplete, centerY }: EnhanceEffectProps)
         }
       }
 
-      const SceneClass = type === 'success' ? EnhanceSuccessScene : EnhanceFailureScene;
-      const sceneKey = type === 'success' ? 'EnhanceSuccessScene' : 'EnhanceFailureScene';
+      class EnhanceEnhancingScene extends Phaser.Scene {
+        private gfx!: Phaser.GameObjects.Graphics;
+        private particles: Particle[] = [];
+        private elapsed = 0;
+        private orbitAngle = 0;
+
+        constructor() { super({ key: 'EnhanceEnhancingScene' }); }
+
+        create() {
+          this.gfx = this.add.graphics();
+          this.elapsed = 0;
+          this.orbitAngle = 0;
+          this.particles = [];
+        }
+
+        update(_time: number, delta: number) {
+          const sw = this.scale.width;
+          const cx = sw / 2;
+          const cy = effectCenterY;
+          const dt = delta / 16.67;
+          this.elapsed += delta;
+          this.orbitAngle += 0.04 * dt;
+          this.gfx.clear();
+
+          // Pulsing core glow
+          const pulse = 0.5 + Math.sin(this.elapsed * 0.006) * 0.3;
+          const coreRadius = 35 + Math.sin(this.elapsed * 0.008) * 8;
+          for (let r = coreRadius + 25; r > 0; r -= 3) {
+            this.gfx.fillStyle(0xa78bfa, (1 - r / (coreRadius + 25)) * pulse * 0.18);
+            this.gfx.fillCircle(cx, cy, r);
+          }
+
+          // Rotating energy ring
+          const ringRadius = 55 + Math.sin(this.elapsed * 0.005) * 5;
+          this.gfx.lineStyle(2, 0xa78bfa, 0.5);
+          this.gfx.beginPath();
+          for (let i = 0; i <= 48; i++) {
+            const a = (i / 48) * Math.PI * 2 + this.orbitAngle;
+            const wobble = Math.sin(a * 6 + this.elapsed * 0.01) * 4;
+            const px = cx + Math.cos(a) * (ringRadius + wobble);
+            const py = cy + Math.sin(a) * (ringRadius + wobble);
+            if (i === 0) this.gfx.moveTo(px, py); else this.gfx.lineTo(px, py);
+          }
+          this.gfx.strokePath();
+
+          // Orbiting energy particles (3 orbs)
+          for (let i = 0; i < 3; i++) {
+            const orbAngle = this.orbitAngle * 1.5 + (i / 3) * Math.PI * 2;
+            const orbX = cx + Math.cos(orbAngle) * ringRadius;
+            const orbY = cy + Math.sin(orbAngle) * ringRadius;
+            this.gfx.fillStyle(0xfbbf24, 0.9);
+            this.gfx.fillCircle(orbX, orbY, 3);
+            this.gfx.fillStyle(0xfbbf24, 0.15);
+            this.gfx.fillCircle(orbX, orbY, 8);
+          }
+
+          // Converging particles from outside
+          if (Math.random() < 0.6) {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 100 + Math.random() * 60;
+            this.particles.push({
+              x: cx + Math.cos(angle) * dist, y: cy + Math.sin(angle) * dist,
+              vx: -Math.cos(angle) * (2.5 + Math.random() * 2),
+              vy: -Math.sin(angle) * (2.5 + Math.random() * 2),
+              size: 1 + Math.random() * 1.5, alpha: 0.4 + Math.random() * 0.3,
+              color: [0xa78bfa, 0x7c3aed, 0xfbbf24, 0xfde68a][Math.floor(Math.random() * 4)],
+              life: 0, maxLife: 18 + Math.random() * 12, gravity: 0,
+            });
+          }
+
+          // Rising sparkles
+          if (Math.random() < 0.3) {
+            this.particles.push({
+              x: cx + (Math.random() - 0.5) * 50, y: cy + 30,
+              vx: (Math.random() - 0.5) * 0.5, vy: -(1 + Math.random() * 1.5),
+              size: 1 + Math.random() * 1, alpha: 0.5,
+              color: [0xa78bfa, 0xfbbf24][Math.floor(Math.random() * 2)],
+              life: 0, maxLife: 15 + Math.random() * 10, gravity: -0.01,
+            });
+          }
+
+          // Draw particles
+          for (let i = this.particles.length - 1; i >= 0; i--) {
+            const p = this.particles[i];
+            p.x += p.vx * dt; p.y += p.vy * dt; p.vy += p.gravity * dt; p.life += dt;
+            const lr = p.life / p.maxLife;
+            let a = p.alpha;
+            if (lr < 0.1) a *= lr / 0.1; else if (lr > 0.6) a *= (1 - lr) / 0.4;
+            if (p.life >= p.maxLife) { this.particles.splice(i, 1); continue; }
+            this.gfx.fillStyle(p.color, Math.max(0, a));
+            this.gfx.fillCircle(p.x, p.y, p.size);
+            if (p.size > 1.2) {
+              this.gfx.fillStyle(p.color, Math.max(0, a * 0.2));
+              this.gfx.fillCircle(p.x, p.y, p.size * 2.5);
+            }
+          }
+        }
+      }
+
+      const sceneMap = {
+        success: { cls: EnhanceSuccessScene, key: 'EnhanceSuccessScene' },
+        failure: { cls: EnhanceFailureScene, key: 'EnhanceFailureScene' },
+        enhancing: { cls: EnhanceEnhancingScene, key: 'EnhanceEnhancingScene' },
+      } as const;
+      const SceneClass = sceneMap[type].cls;
+      const sceneKey = sceneMap[type].key;
 
       const game = new Phaser.Game({
         type: Phaser.CANVAS,

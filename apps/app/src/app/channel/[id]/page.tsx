@@ -8,6 +8,7 @@ import { Badge, Button, Input, Modal, Spinner, useToast } from '@gate-breaker/ui
 import { useAuth } from '@/context/auth-context';
 import { useSocket } from '@/hooks/use-socket';
 import { EnhanceEffect, type EnhanceEffectType } from '@/components/enhance-effect';
+import { getEnhanceColor } from '@/lib/enhance-color';
 
 interface EnhanceListItem {
   inventoryId: string;
@@ -36,13 +37,6 @@ const SLASH_COMMANDS = [
   { command: '/강화', description: '장비 강화 시도' },
 ];
 
-const RARITY_COLORS: Record<string, string> = {
-  COMMON: '#888',
-  RARE: '#4a9eff',
-  EPIC: '#b048f8',
-  LEGENDARY: '#ff8c00',
-  MYTHIC: '#ff2d55',
-};
 const ITEM_TYPE_ICONS: Record<string, string> = {
   WEAPON: '⚔️',
   ARMOR: '🛡️',
@@ -708,7 +702,7 @@ export default function ChannelDetailPage() {
                         width: '100%',
                         aspectRatio: '1 / 1',
                         borderRadius: 8,
-                        border: `1px solid ${(RARITY_COLORS[item.rarity] ?? '#666')}66`,
+                        border: `1px solid ${getEnhanceColor(item.enhanceLevel).color}40`,
                         background: 'linear-gradient(180deg, #1c1f3e, #14162b)',
                         display: 'flex',
                         alignItems: 'center',
@@ -735,7 +729,7 @@ export default function ChannelDetailPage() {
                         +{item.enhanceLevel}
                       </span>
                     </div>
-                    <div style={{ fontSize: 11, color: RARITY_COLORS[item.rarity] ?? '#ddd', fontWeight: 700, lineHeight: 1.3 }}>
+                    <div style={{ fontSize: 11, color: getEnhanceColor(item.enhanceLevel).color, fontWeight: 700, lineHeight: 1.3 }}>
                       {item.itemName}
                     </div>
                   </button>

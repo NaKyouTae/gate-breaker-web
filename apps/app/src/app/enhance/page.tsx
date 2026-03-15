@@ -3,18 +3,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { inventory } from '@gate-breaker/api-client';
-import type { InventoryItem, ItemRarity } from '@gate-breaker/types';
+import type { InventoryItem } from '@gate-breaker/types';
 import { Badge, Card, Spinner, useToast } from '@gate-breaker/ui';
 import { useAuth } from '@/context/auth-context';
 import { EnhanceView } from '@/components/enhance-view';
-
-const RARITY_COLORS: Record<ItemRarity, string> = {
-  COMMON: '#888',
-  RARE: '#4a9eff',
-  EPIC: '#b048f8',
-  LEGENDARY: '#ff8c00',
-  MYTHIC: '#ff2d55',
-};
+import { getEnhanceColor } from '@/lib/enhance-color';
 
 const ENHANCABLE_TYPES = new Set(['WEAPON', 'ARMOR', 'GLOVE', 'SHOE', 'RING', 'NECKLACE']);
 
@@ -113,7 +106,7 @@ export default function EnhancePage() {
                   )}
                 </div>
                 <div>
-                  <div style={{ color: RARITY_COLORS[inv.item.rarity], fontSize: '1.05rem', fontWeight: 700 }}>{inv.item.name}</div>
+                  <div style={{ color: getEnhanceColor(inv.enhanceLevel).color, fontSize: '1.05rem', fontWeight: 700 }}>{inv.item.name}</div>
                   <div style={{ color: '#aaa', fontSize: '0.9rem', marginTop: '3px' }}>+{inv.enhanceLevel}</div>
                 </div>
               </div>

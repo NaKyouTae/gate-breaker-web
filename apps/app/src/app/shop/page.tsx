@@ -5,15 +5,7 @@ import { useRouter } from 'next/navigation';
 import { shop, user as userApi } from '@gate-breaker/api-client';
 import { Button, Modal, Spinner, useToast, Input } from '@gate-breaker/ui';
 import { useAuth } from '@/context/auth-context';
-import type { ShopItem, ItemType, ItemRarity } from '@gate-breaker/types';
-
-const RARITY_COLORS: Record<ItemRarity, string> = {
-  COMMON: '#888',
-  RARE: '#4a9eff',
-  EPIC: '#b048f8',
-  LEGENDARY: '#ff8c00',
-  MYTHIC: '#ff2d55',
-};
+import type { ShopItem, ItemType } from '@gate-breaker/types';
 
 const TYPE_LABELS: Record<ItemType, string> = {
   WEAPON: '무기',
@@ -145,8 +137,8 @@ export default function ShopPage() {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-            gap: '12px',
+            gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
+            gap: '8px',
           }}
         >
           {filteredItems.map((item) => {
@@ -158,7 +150,7 @@ export default function ShopPage() {
               >
                 <div
                   className="item-box"
-                  style={{ borderColor: `${RARITY_COLORS[item.rarity]}25` }}
+                  style={{ borderColor: 'rgba(255,255,255,0.15)', borderRadius: '8px' }}
                 >
                   {item.imageUrl ? (
                     <img src={item.imageUrl} alt={item.name} />
@@ -166,10 +158,10 @@ export default function ShopPage() {
                     'NO IMG'
                   )}
                 </div>
-                <div className="item-name" style={{ color: RARITY_COLORS[item.rarity] }}>
+                <div className="item-name" style={{ color: '#ddd', fontSize: '0.6rem' }}>
                   {item.name}
                 </div>
-                <div className="item-price">
+                <div className="item-price" style={{ fontSize: '0.62rem' }}>
                   {item.buyPrice.toLocaleString()} G
                 </div>
               </div>
@@ -194,7 +186,7 @@ export default function ShopPage() {
                   width: 92,
                   height: 92,
                   aspectRatio: 'unset',
-                  borderColor: `${RARITY_COLORS[selectedItem.rarity]}30`,
+                  borderColor: 'rgba(255,255,255,0.2)',
                   marginBottom: '12px',
                 }}
               >
@@ -208,7 +200,7 @@ export default function ShopPage() {
                 style={{
                   fontSize: '1.1rem',
                   fontWeight: 700,
-                  color: RARITY_COLORS[selectedItem.rarity],
+                  color: '#ddd',
                   marginBottom: '8px',
                 }}
               >

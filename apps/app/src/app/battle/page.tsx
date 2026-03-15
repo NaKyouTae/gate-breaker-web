@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { battle as battleApi, dungeon as dungeonApi, inventory as inventoryApi } from '@gate-breaker/api-client';
+import { battle as battleApi, dungeon as dungeonApi, inventory as inventoryApi, user as userApi } from '@gate-breaker/api-client';
 import type { BattleSession, InventoryItem } from '@gate-breaker/types';
 import { Button, Spinner, Modal, useToast } from '@gate-breaker/ui';
 import { useAuth } from '@/context/auth-context';
@@ -79,7 +79,6 @@ interface DungeonProgress {
   currentMonsterIndex: number;
   defeatedMonsters: string[];
   isBossNext: boolean;
-  monsterLevels: number[];
 }
 
 const DUNGEON_MENU_ROUTE = '/dashboard';
@@ -113,7 +112,9 @@ function BattleContent() {
   const [showDefeatModal, setShowDefeatModal] = useState(false);
   const [dungeonProgress, setDungeonProgress] = useState<DungeonProgress | null>(null);
   const [showDungeonClear, setShowDungeonClear] = useState(false);
-  const [totalRewards, setTotalRewards] = useState<{ exp: number; gold: number; items: { name: string; rarity: string }[] }>({ exp: 0, gold: 0, items: [] });
+  const [totalRewards, setTotalRewards] = useState<{ exp: number; gold: number }>({ exp: 0, gold: 0 });
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [levelUpInfo, setLevelUpInfo] = useState<{ prevLevel: number; newLevel: number; prevMaxHp: number; newMaxHp: number; prevMaxMp: number; newMaxMp: number; prevAttack: number; newAttack: number; prevDefense: number; newDefense: number } | null>(null);
   const logEndRef = useRef<HTMLDivElement>(null);
   const [attackShake, setAttackShake] = useState(false);
   const [playerAttackAnim, setPlayerAttackAnim] = useState(false);
@@ -154,7 +155,7 @@ function BattleContent() {
     const progress = getDungeonProgress();
     if (!progress) return false;
     try {
-      await dungeonApi.enter(progress.dungeonId);
+      await dungeonApi.enter(progress.dungeonId, progress.currentMonsterIndex);
       const newSession = await battleApi.status();
       setSession(newSession);
       addToast('전투가 재개되었습니다.', 'info');
@@ -178,17 +179,10 @@ function BattleContent() {
       resumeIndexRaw < resumeTotalRaw;
 
     if (dungeonId && (!existing || existing.dungeonId !== dungeonId)) {
-      const minLv = Number(searchParams.get('minLv')) || 1;
-      const maxLv = Number(searchParams.get('maxLv')) || minLv;
       const dgName = searchParams.get('dgName') || '';
       const monsterCount = Math.floor(Math.random() * 3) + 3;
       const total = hasResumeProgress ? resumeTotalRaw : monsterCount + 1;
       const currentMonsterIndex = hasResumeProgress ? resumeIndexRaw : 0;
-      const regularLevels = Array.from({ length: total - 1 }, () =>
-        minLv + Math.floor(Math.random() * (maxLv - minLv + 1)),
-      ).sort((a, b) => a - b);
-      const bossLevel = Math.max(...regularLevels, maxLv) + Math.floor(Math.random() * 2) + 1;
-      const monsterLevels = [...regularLevels, bossLevel];
       const progress: DungeonProgress = {
         dungeonId,
         dungeonName: dgName,
@@ -196,7 +190,6 @@ function BattleContent() {
         currentMonsterIndex,
         defeatedMonsters: Array.from({ length: currentMonsterIndex }, (_, i) => `defeated-${i + 1}`),
         isBossNext: currentMonsterIndex === total - 2,
-        monsterLevels,
       };
       saveDungeonProgress(progress);
       setDungeonProgress(progress);
@@ -285,7 +278,6 @@ function BattleContent() {
       setTotalRewards(prev => ({
         exp: prev.exp + currentSession.rewards!.exp,
         gold: prev.gold + currentSession.rewards!.gold,
-        items: [...prev.items, ...(currentSession.rewards!.items?.map(i => ({ name: i.name, rarity: i.rarity })) || [])],
       }));
     }
 
@@ -326,7 +318,7 @@ function BattleContent() {
       await battleApi.confirm();
       // Small pause before entering next battle
       await delay(300);
-      await dungeonApi.enter(currentProgress.dungeonId);
+      await dungeonApi.enter(currentProgress.dungeonId, nextIndex);
       const newSession = await battleApi.status();
       setSession(newSession);
       // Monster enter animation
@@ -557,11 +549,35 @@ function BattleContent() {
   }, [usingItem, session, addToast]);
 
   const handleDungeonClearConfirm = useCallback(async () => {
+    const prevUser = authUser;
     setShowDungeonClear(false);
-    setTotalRewards({ exp: 0, gold: 0, items: [] });
+    setTotalRewards({ exp: 0, gold: 0 });
     await refreshUser();
+    const newUser = await userApi.me();
+    if (prevUser && newUser && newUser.level > prevUser.level) {
+      setLevelUpInfo({
+        prevLevel: prevUser.level,
+        newLevel: newUser.level,
+        prevMaxHp: prevUser.maxHp,
+        newMaxHp: newUser.maxHp,
+        prevMaxMp: prevUser.maxMp,
+        newMaxMp: newUser.maxMp,
+        prevAttack: prevUser.attack,
+        newAttack: newUser.attack,
+        prevDefense: prevUser.defense,
+        newDefense: newUser.defense,
+      });
+      setShowLevelUp(true);
+    } else {
+      router.push(DUNGEON_MENU_ROUTE);
+    }
+  }, [router, refreshUser, authUser]);
+
+  const handleLevelUpConfirm = useCallback(() => {
+    setShowLevelUp(false);
+    setLevelUpInfo(null);
     router.push(DUNGEON_MENU_ROUTE);
-  }, [router, refreshUser]);
+  }, [router]);
 
   if (authLoading || loading) {
     return (
@@ -577,7 +593,6 @@ function BattleContent() {
   const currentMonsterNum = progress ? progress.currentMonsterIndex + 1 : 1;
   const totalMonsters = progress ? progress.totalMonsters : 1;
   const isBossMonster = progress ? progress.currentMonsterIndex === progress.totalMonsters - 1 : false;
-  const monsterLevel = progress?.monsterLevels?.[progress.currentMonsterIndex] ?? null;
 
   const resultTitle = session.result === 'DEFEAT' ? '패배...' : session.result === 'ESCAPE' ? '도주 성공' : '';
   const resultColor = session.result === 'DEFEAT' ? '#e94560' : '#f39c12';
@@ -806,7 +821,6 @@ function BattleContent() {
               <span style={{ fontSize: '13px', fontWeight: 800, color: isBossMonster ? '#e94560' : '#eee' }}>
                 {isBossMonster && '👑 '}{session.monster.name}
               </span>
-              <span style={{ fontSize: '10px', color: '#888', fontWeight: 600 }}>Lv.{monsterLevel ?? '??'}</span>
             </div>
             <HpBar current={session.enemyHp} max={session.enemyMaxHp} height={7} showNumbers />
           </div>
@@ -1445,21 +1459,132 @@ function BattleContent() {
               <span style={{ color: '#888' }}>총 골드</span>
               <span style={{ color: '#fbbf24', fontWeight: 700 }}>+{totalRewards.gold.toLocaleString()} G</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', fontSize: '14px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', fontSize: '14px' }}>
               <span style={{ color: '#888' }}>총 경험치</span>
               <span style={{ color: '#2ecc71', fontWeight: 700 }}>+{totalRewards.exp.toLocaleString()} EXP</span>
             </div>
-            {totalRewards.items.length > 0 && (
-              <div style={{ marginTop: '10px' }}>
-                <span style={{ color: '#888', fontSize: '12px' }}>획득 아이템:</span>
-                {totalRewards.items.map((item, idx) => (
-                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '12px' }}>
-                    <span style={{ color: '#c4b5fd' }}>{item.name}</span>
-                    <span style={{ color: '#666' }}>{item.rarity}</span>
-                  </div>
-                ))}
+          </div>
+
+          <p
+            style={{
+              position: 'absolute',
+              bottom: 'calc(40px + env(safe-area-inset-bottom))',
+              color: '#555',
+              fontSize: '12px',
+              fontWeight: 500,
+              animation: 'clearPulse 2s ease-in-out infinite',
+              letterSpacing: '1px',
+            }}
+          >
+            화면을 터치하여 나가기
+          </p>
+        </div>
+      )}
+
+      {/* ─── Level Up Fullscreen ─── */}
+      {showLevelUp && levelUpInfo && (
+        <div
+          onClick={handleLevelUpConfirm}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 200,
+            background: 'linear-gradient(180deg, rgba(5,5,15,0.97), rgba(15,10,30,0.99), rgba(5,5,15,0.97))',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '40px 24px',
+            animation: 'clearFadeIn 0.5s ease',
+            cursor: 'pointer',
+          }}
+        >
+          {[...Array(8)].map((_, i) => (
+            <div
+              key={i}
+              style={{
+                position: 'absolute',
+                width: '4px', height: '4px',
+                borderRadius: '50%',
+                background: '#a78bfa',
+                top: `${10 + Math.random() * 80}%`,
+                left: `${5 + Math.random() * 90}%`,
+                animation: `sparkle ${1.5 + Math.random()}s ease-in-out ${Math.random() * 2}s infinite`,
+                boxShadow: '0 0 8px rgba(167,139,250,0.6)',
+              }}
+            />
+          ))}
+
+          <div style={{ fontSize: '72px', animation: 'clearTrophyBounce 0.8s ease-out', marginBottom: '16px' }}>⬆️</div>
+
+          <p
+            style={{
+              fontSize: '2rem', fontWeight: 900,
+              background: 'linear-gradient(135deg, #a78bfa, #7c3aed, #a78bfa)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              margin: '0 0 12px',
+              animation: 'clearSlideUp 0.6s ease-out 0.3s both',
+              textAlign: 'center',
+            }}
+          >
+            레벨 업!
+          </p>
+
+          <p
+            style={{
+              fontSize: '1.1rem', fontWeight: 800,
+              color: '#e2d9f3',
+              margin: '0 0 32px',
+              animation: 'clearSlideUp 0.6s ease-out 0.4s both',
+              textAlign: 'center',
+              letterSpacing: '2px',
+            }}
+          >
+            Lv.{levelUpInfo.prevLevel} → Lv.{levelUpInfo.newLevel}
+          </p>
+
+          <div
+            style={{
+              width: '100%', maxWidth: '340px',
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(167,139,250,0.2)',
+              borderRadius: '12px',
+              padding: '20px',
+              animation: 'clearSlideUp 0.6s ease-out 0.5s both',
+            }}
+          >
+            <h4 style={{ margin: '0 0 14px', fontSize: '13px', fontWeight: 700, color: '#a78bfa', textAlign: 'center', letterSpacing: '2px' }}>
+              STATUS CHANGE
+            </h4>
+            {[
+              { label: 'HP', prev: levelUpInfo.prevMaxHp, next: levelUpInfo.newMaxHp, color: '#2ecc71' },
+              { label: 'MP', prev: levelUpInfo.prevMaxMp, next: levelUpInfo.newMaxMp, color: '#3b82f6' },
+              { label: 'ATK', prev: levelUpInfo.prevAttack, next: levelUpInfo.newAttack, color: '#e94560' },
+              { label: 'DEF', prev: levelUpInfo.prevDefense, next: levelUpInfo.newDefense, color: '#4a9eff' },
+            ].map((stat, idx, arr) => (
+              <div
+                key={stat.label}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '10px 0',
+                  fontSize: '14px',
+                  borderBottom: idx < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                }}
+              >
+                <span style={{ color: stat.color, fontWeight: 700, fontSize: '13px', minWidth: '36px' }}>{stat.label}</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ color: '#888', fontWeight: 600 }}>{stat.prev}</span>
+                  <span style={{ color: '#555', fontSize: '12px' }}>→</span>
+                  <span style={{ color: '#e2d9f3', fontWeight: 800 }}>{stat.next}</span>
+                  {stat.next > stat.prev && (
+                    <span style={{ color: '#2ecc71', fontSize: '12px', fontWeight: 700 }}>+{stat.next - stat.prev}</span>
+                  )}
+                </span>
               </div>
-            )}
+            ))}
           </div>
 
           <p

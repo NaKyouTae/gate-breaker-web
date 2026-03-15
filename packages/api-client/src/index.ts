@@ -165,8 +165,8 @@ export const inventory = {
 export const dungeon = {
   list: () => request<Dungeon[]>('/dungeon'),
   get: (id: string) => request<Dungeon>(`/dungeon/${id}`),
-  enter: (id: string) =>
-    request<BattleSession>(`/dungeon/${id}/enter`, { method: 'POST' }),
+  enter: (id: string, monsterIndex?: number) =>
+    request<BattleSession>(`/dungeon/${id}/enter${monsterIndex != null ? `?monsterIndex=${monsterIndex}` : ''}`, { method: 'POST' }),
 };
 
 // ===== Battle =====
