@@ -124,15 +124,9 @@ export function TopHud() {
     return null;
   }
 
-  // EXP progress: requiredExp(level) = floor(100 * level^1.5)
-  const cumulativeExp = (lvl: number) => {
-    let sum = 0;
-    for (let k = 1; k < lvl; k++) sum += Math.floor(100 * Math.pow(k, 1.5));
-    return sum;
-  };
-  const levelStartExp = cumulativeExp(user.level);
+  // EXP progress: server stores exp as within-level value (reset on level up)
   const requiredExpForLevel = Math.floor(100 * Math.pow(user.level, 1.5));
-  const currentExpInLevel = Math.max(0, user.exp - levelStartExp);
+  const currentExpInLevel = Math.max(0, user.exp);
   const expPercent = requiredExpForLevel > 0 ? Math.min(100, Math.round((currentExpInLevel / requiredExpForLevel) * 100)) : 0;
 
   return (

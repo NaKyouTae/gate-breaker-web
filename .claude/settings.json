@@ -63,7 +63,8 @@
       "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/app/src -type f \\\\\\(-name *.ts -o -name *.tsx -o -name *.js -o -name *.jsx \\\\\\))",
       "Bash(grep -r \"녹슨\\\\|강철\\\\|미스릴\\\\|용의\" /Users/nakyutae/personal/git/gate-breaker --include=*.ts --include=*.tsx --include=*.md ! -path */node_modules/*)",
       "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/app/src -name middleware* -o -name *middleware*)",
-      "Bash(grep -n \"$transaction\\\\|tx\\\\.\" /Users/nakyutae/personal/git/gate-breaker/gate-breaker-server/src/bootstrap/weapon-catalog.seed.ts)"
+      "Bash(grep -n \"$transaction\\\\|tx\\\\.\" /Users/nakyutae/personal/git/gate-breaker/gate-breaker-server/src/bootstrap/weapon-catalog.seed.ts)",
+      "Bash(grep -r \"updateGold\\\\|modifyGold\\\\|addGold\" /Users/nakyutae/personal/git/gate-breaker/gate-breaker-server/src --include=*.ts)"
     ],
     "additionalDirectories": [
       "/Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/admin/.next",

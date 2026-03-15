@@ -334,6 +334,8 @@ export const admin = {
       return res;
     },
     get: (id: string) => request<UserDetail>(`/admin/users/${id}`),
+    update: (id: string, dto: Partial<Pick<User, 'level' | 'exp' | 'gold' | 'hp' | 'maxHp' | 'mp' | 'maxMp' | 'attack' | 'defense'>>) =>
+      request<User>(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify(dto) }),
     ban: (id: string) =>
       request<{ message: string; userId: string }>(`/admin/users/${id}/ban`, { method: 'PATCH' }),
   },
