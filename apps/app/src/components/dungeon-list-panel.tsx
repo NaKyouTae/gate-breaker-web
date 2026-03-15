@@ -181,7 +181,7 @@ export function DungeonListPanel({
                   출현 몬스터
                 </div>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {d.monsters.map((m) => (
+                  {[...d.monsters].sort((a, b) => a.sortOrder - b.sortOrder).map((m) => (
                     <div
                       key={m.id}
                       style={{

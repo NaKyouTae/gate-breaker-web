@@ -16,6 +16,7 @@ type ItemForm = {
   baseAttack: number;
   baseDefense: number;
   baseHp: number;
+  healHp: number;
   description: string;
   sellPrice: number;
   buyPrice: number;
@@ -49,6 +50,7 @@ const EMPTY_FORM: ItemForm = {
   baseAttack: 0,
   baseDefense: 0,
   baseHp: 0,
+  healHp: 0,
   description: '',
   sellPrice: 0,
   buyPrice: 0,
@@ -124,6 +126,7 @@ export default function ItemsPage() {
     baseAttack: i.baseAttack,
     baseDefense: i.baseDefense,
     baseHp: i.baseHp,
+    healHp: i.healHp || 0,
     description: i.description || '',
     sellPrice: i.sellPrice,
     buyPrice: i.buyPrice || 0,
@@ -282,6 +285,9 @@ export default function ItemsPage() {
         <AdminFormField label="HP">
           <Input type="number" value={String(form.baseHp)} onChange={(e) => changeNum(setter, 'baseHp', e.target.value)} />
         </AdminFormField>
+        <AdminFormField label="회복력">
+          <Input type="number" value={String(form.healHp)} onChange={(e) => changeNum(setter, 'healHp', e.target.value)} />
+        </AdminFormField>
         <AdminFormField label="판매가">
           <Input type="number" value={String(form.sellPrice)} onChange={(e) => changeNum(setter, 'sellPrice', e.target.value)} />
         </AdminFormField>
@@ -439,11 +445,12 @@ export default function ItemsPage() {
                       </span>
                     </div>
                     {/* 스탯 그리드 */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(50px, 1fr))', gap: 6 }}>
                       {[
                         { label: '공격', value: row.baseAttack, color: '#f97316' },
                         { label: '방어', value: row.baseDefense, color: '#3b82f6' },
                         { label: 'HP', value: row.baseHp, color: '#ef4444' },
+                        { label: '회복', value: row.healHp, color: '#22c55e' },
                         { label: '판매가', value: row.sellPrice, color: '#fbbf24' },
                         { label: '구매가', value: row.buyPrice, color: '#a78bfa' },
                       ].map(({ label, value, color }) => (

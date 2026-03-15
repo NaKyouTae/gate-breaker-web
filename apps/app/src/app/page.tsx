@@ -45,7 +45,7 @@ export default function HomePage() {
         <div
           style={{
             width: '100%',
-            minHeight: '100dvh',
+            minHeight: '100%',
             display: 'flex',
             alignItems: 'flex-end',
             justifyContent: 'center',

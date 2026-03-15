@@ -166,14 +166,24 @@ export const inventory = {
     ),
   discard: (id: string) =>
     request<{ message: string }>(`/inventory/${id}`, { method: 'DELETE' }),
+  restore: (inventoryId: string) =>
+    request<{ message: string; inventory: InventoryItem; goldCost: number }>(
+      '/inventory/restore',
+      { method: 'POST', body: JSON.stringify({ inventoryId }) },
+    ),
 };
 
 // ===== Dungeon =====
 export const dungeon = {
   list: () => request<Dungeon[]>('/dungeon'),
   get: (id: string) => request<Dungeon>(`/dungeon/${id}`),
-  enter: (id: string, monsterIndex?: number) =>
-    request<BattleSession>(`/dungeon/${id}/enter${monsterIndex != null ? `?monsterIndex=${monsterIndex}` : ''}`, { method: 'POST' }),
+  enter: (id: string, monsterIndex?: number, isBoss?: boolean) => {
+    const params = new URLSearchParams();
+    if (monsterIndex != null) params.set('monsterIndex', String(monsterIndex));
+    if (isBoss) params.set('isBoss', 'true');
+    const qs = params.toString();
+    return request<BattleSession>(`/dungeon/${id}/enter${qs ? `?${qs}` : ''}`, { method: 'POST' });
+  },
 };
 
 // ===== Battle =====
@@ -377,6 +387,8 @@ export const admin = {
     list: () => request<Item[]>('/admin/shop'),
     update: (id: string, dto: { buyPrice: number }) =>
       request<Item>(`/admin/shop/${id}`, { method: 'PATCH', body: JSON.stringify(dto) }),
+    remove: (id: string) =>
+      request<Item>(`/admin/shop/${id}`, { method: 'DELETE' }),
   },
   dropTables: {
     list: () => request<DropTable[]>('/admin/drop-tables'),

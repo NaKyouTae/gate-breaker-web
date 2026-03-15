@@ -114,7 +114,7 @@ function BattleContent() {
   const [showDungeonClear, setShowDungeonClear] = useState(false);
   const [totalRewards, setTotalRewards] = useState<{ exp: number; gold: number }>({ exp: 0, gold: 0 });
   const [showLevelUp, setShowLevelUp] = useState(false);
-  const [levelUpInfo, setLevelUpInfo] = useState<{ prevLevel: number; newLevel: number; prevMaxHp: number; newMaxHp: number; prevMaxMp: number; newMaxMp: number; prevAttack: number; newAttack: number; prevDefense: number; newDefense: number } | null>(null);
+  const [levelUpInfo, setLevelUpInfo] = useState<{ prevLevel: number; newLevel: number; prevMaxHp: number; newMaxHp: number; prevMaxMp: number; newMaxMp: number; prevDefense: number; newDefense: number } | null>(null);
   const logEndRef = useRef<HTMLDivElement>(null);
   const [attackShake, setAttackShake] = useState(false);
   const [playerAttackAnim, setPlayerAttackAnim] = useState(false);
@@ -155,7 +155,8 @@ function BattleContent() {
     const progress = getDungeonProgress();
     if (!progress) return false;
     try {
-      await dungeonApi.enter(progress.dungeonId, progress.currentMonsterIndex);
+      const isBossSlot = progress.currentMonsterIndex === progress.totalMonsters - 1;
+      await dungeonApi.enter(progress.dungeonId, progress.currentMonsterIndex, isBossSlot);
       const newSession = await battleApi.status();
       setSession(newSession);
       addToast('전투가 재개되었습니다.', 'info');
@@ -318,7 +319,7 @@ function BattleContent() {
       await battleApi.confirm();
       // Small pause before entering next battle
       await delay(300);
-      await dungeonApi.enter(currentProgress.dungeonId, nextIndex);
+      await dungeonApi.enter(currentProgress.dungeonId, nextIndex, isBossNext);
       const newSession = await battleApi.status();
       setSession(newSession);
       // Monster enter animation
@@ -577,8 +578,6 @@ function BattleContent() {
         newMaxHp: newUser.maxHp,
         prevMaxMp: prevUser.maxMp,
         newMaxMp: newUser.maxMp,
-        prevAttack: prevUser.attack,
-        newAttack: newUser.attack,
         prevDefense: prevUser.defense,
         newDefense: newUser.defense,
       });
@@ -834,7 +833,7 @@ function BattleContent() {
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
               <span style={{ fontSize: '13px', fontWeight: 800, color: isBossMonster ? '#e94560' : '#eee' }}>
-                {isBossMonster && '👑 '}{session.monster.name}
+                {isBossMonster && '👑 '}{session.monster?.name}
               </span>
             </div>
             <HpBar current={session.enemyHp} max={session.enemyMaxHp} height={7} showNumbers />
@@ -861,7 +860,7 @@ function BattleContent() {
                 ...(monsterAttacking ? { animation: 'monsterLunge 0.5s ease' } : {}),
               }}
             >
-              {session.monster.imageUrl ? (
+              {session.monster?.imageUrl ? (
                 <img
                   src={session.monster.imageUrl}
                   alt={session.monster.name}
@@ -986,7 +985,7 @@ function BattleContent() {
             backdropFilter: 'blur(4px)',
           }}
         >
-          {session.log.length === 0 ? (
+          {!session.log || session.log.length === 0 ? (
             <p style={{ color: '#444', fontSize: '11px', textAlign: 'center', margin: '4px 0' }}>전투를 시작하세요.</p>
           ) : (
             session.log.slice(-4).map((entry, idx) => {
@@ -1575,7 +1574,6 @@ function BattleContent() {
             {[
               { label: 'HP', prev: levelUpInfo.prevMaxHp, next: levelUpInfo.newMaxHp, color: '#2ecc71' },
               { label: 'MP', prev: levelUpInfo.prevMaxMp, next: levelUpInfo.newMaxMp, color: '#3b82f6' },
-              { label: 'ATK', prev: levelUpInfo.prevAttack, next: levelUpInfo.newAttack, color: '#e94560' },
               { label: 'DEF', prev: levelUpInfo.prevDefense, next: levelUpInfo.newDefense, color: '#4a9eff' },
             ].map((stat, idx, arr) => (
               <div

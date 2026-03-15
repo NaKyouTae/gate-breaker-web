@@ -62,9 +62,17 @@ export default function DungeonListPage() {
           monster?: { name?: string };
         } | null;
 
-        const hasActiveBattle = !!status && (
+        // If battle ended (DEFEAT/ESCAPE), auto-confirm to clean up server session
+        if (status?.result && status.result !== 'VICTORY') {
+          try { await battleApi.confirm(); } catch { /* ignore */ }
+          if (typeof window !== 'undefined') {
+            sessionStorage.removeItem('dungeonProgress');
+          }
+        }
+
+        const hasActiveBattle = !!status && !status.result && (
           status.isInBattle === true ||
-          (!!status.id && !status.result)
+          !!status.id
         );
 
         if (hasActiveBattle && status?.dungeonId) {

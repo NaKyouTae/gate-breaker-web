@@ -58,7 +58,11 @@
       "Bash(grep -r \"item-box\\\\|item-name\\\\|item-price\" /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps --include=*.tsx --include=*.ts --include=*.css)",
       "Bash(grep -r \"purgeNonWeaponEquipment\\\\|removeNonWeapon\\\\|deleteWeapon\\\\|old.*weapon\\\\|legacy.*weapon\" /Users/nakyutae/personal/git/gate-breaker/gate-breaker-server/src --include=*.ts)",
       "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-server -name *attack* -o -name *battle* -o -name *damage*)",
-      "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-server/src/battle -type f \\\\\\(-name *.ts -o -name *.js \\\\\\))"
+      "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-server/src/battle -type f \\\\\\(-name *.ts -o -name *.js \\\\\\))",
+      "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/packages -name types -o -name *.types.ts)",
+      "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/app/src -type f \\\\\\(-name *.ts -o -name *.tsx -o -name *.js -o -name *.jsx \\\\\\))",
+      "Bash(grep -r \"녹슨\\\\|강철\\\\|미스릴\\\\|용의\" /Users/nakyutae/personal/git/gate-breaker --include=*.ts --include=*.tsx --include=*.md ! -path */node_modules/*)",
+      "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/app/src -name middleware* -o -name *middleware*)"
     ],
     "additionalDirectories": [
       "/Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/admin/.next",

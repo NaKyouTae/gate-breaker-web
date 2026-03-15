@@ -22,6 +22,7 @@ const TYPE_LABELS: Record<ItemType, string> = {
 };
 
 function getItemDisplayName(inv: InventoryItem): string {
+  if (inv.isDestroyed) return `${inv.item.name} (파괴)`;
   const base = inv.item.name;
   return inv.enhanceLevel > 0 ? `${base} (+${inv.enhanceLevel})` : base;
 }
@@ -120,6 +121,20 @@ function InventoryContent() {
     }
   };
 
+  const handleRestore = async (item: InventoryItem) => {
+    setActionLoading(true);
+    try {
+      const result = await inventory.restore(item.id);
+      addToast(result.message, 'success');
+      setDetailItem(null);
+      await Promise.all([fetchItems(), refreshUser()]);
+    } catch (e: unknown) {
+      addToast(e instanceof Error ? e.message : '복원에 실패했습니다.', 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   if (authLoading || loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
@@ -196,7 +211,11 @@ function InventoryContent() {
               </div>
               <div style={{ display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center', marginTop: 6 }}>
                 <span style={{ fontSize: '0.8rem', color: '#666' }}>{TYPE_LABELS[detailItem.item.type]}</span>
-                {detailItem.enhanceLevel > 0 && <Badge variant="warning">+{detailItem.enhanceLevel} 강화</Badge>}
+                {detailItem.isDestroyed ? (
+                  <Badge variant="danger">파괴됨</Badge>
+                ) : detailItem.enhanceLevel > 0 ? (
+                  <Badge variant="warning">+{detailItem.enhanceLevel} 강화</Badge>
+                ) : null}
               </div>
             </div>
 
@@ -255,27 +274,45 @@ function InventoryContent() {
             flexShrink: 0, padding: '16px 24px', paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
             display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 440, margin: '0 auto', width: '100%',
           }}>
-            <div style={{ display: 'flex', gap: 10 }}>
-              {isWeapon && (
-                detailItem.isEquipped ? (
-                  <button className="btn-action secondary" disabled={actionLoading} onClick={() => handleUnequip(detailItem)}>해제</button>
-                ) : (
-                  <button className="btn-action primary" disabled={actionLoading} onClick={() => handleEquip(detailItem)}>장착</button>
-                )
-              )}
-              {isWeapon && (
-                <button className="btn-action warning" disabled={actionLoading} onClick={() => setEnhanceItem(detailItem)}>강화하기</button>
-              )}
-            </div>
-            {!detailItem.isEquipped && (
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button className="btn-action ghost" disabled={actionLoading} onClick={() => handleSell(detailItem)} style={{ padding: '12px 0', fontSize: '0.85rem' }}>
-                  판매 ({detailItem.item.sellPrice}G)
+            {detailItem.isDestroyed ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <button className="btn-action primary" disabled={actionLoading} onClick={() => handleRestore(detailItem)}
+                  style={{ width: '100%', padding: '16px 0', fontSize: '1rem', fontWeight: 800 }}>
+                  복원하기 (5,000G)
                 </button>
-                <button className="btn-action danger" disabled={actionLoading} onClick={() => handleDiscard(detailItem)} style={{ padding: '12px 0', fontSize: '0.85rem' }}>
+                <div style={{ fontSize: '0.75rem', color: '#888', textAlign: 'center' }}>
+                  동일한 무기 +10 강화 상태로 복원됩니다
+                </div>
+                <button className="btn-action danger" disabled={actionLoading} onClick={() => handleDiscard(detailItem)}
+                  style={{ padding: '12px 0', fontSize: '0.85rem' }}>
                   버리기
                 </button>
               </div>
+            ) : (
+              <>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  {isWeapon && (
+                    detailItem.isEquipped ? (
+                      <button className="btn-action secondary" disabled={actionLoading} onClick={() => handleUnequip(detailItem)}>해제</button>
+                    ) : (
+                      <button className="btn-action primary" disabled={actionLoading} onClick={() => handleEquip(detailItem)}>장착</button>
+                    )
+                  )}
+                  {isWeapon && (
+                    <button className="btn-action warning" disabled={actionLoading} onClick={() => setEnhanceItem(detailItem)}>강화하기</button>
+                  )}
+                </div>
+                {!detailItem.isEquipped && (
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <button className="btn-action ghost" disabled={actionLoading} onClick={() => handleSell(detailItem)} style={{ padding: '12px 0', fontSize: '0.85rem' }}>
+                      판매 ({detailItem.item.sellPrice}G)
+                    </button>
+                    <button className="btn-action danger" disabled={actionLoading} onClick={() => handleDiscard(detailItem)} style={{ padding: '12px 0', fontSize: '0.85rem' }}>
+                      버리기
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -287,6 +324,8 @@ function InventoryContent() {
   const getFilteredItems = () => {
     if (bagCategory === 'weapon') {
       return items.filter((i) => i.item.type === 'WEAPON').sort((a, b) => {
+        if (a.isDestroyed && !b.isDestroyed) return 1;
+        if (!a.isDestroyed && b.isDestroyed) return -1;
         if (a.isEquipped && !b.isEquipped) return -1;
         if (!a.isEquipped && b.isEquipped) return 1;
         return 0;
@@ -336,23 +375,31 @@ function InventoryContent() {
               <div
                 className="item-box"
                 style={{
-                  borderColor: inv.isEquipped ? getEnhanceColor(inv.enhanceLevel).color : `${getEnhanceColor(inv.enhanceLevel).color}25`,
+                  borderColor: inv.isDestroyed
+                    ? '#e9456040'
+                    : inv.isEquipped ? getEnhanceColor(inv.enhanceLevel).color : `${getEnhanceColor(inv.enhanceLevel).color}25`,
                   borderWidth: inv.isEquipped ? '2px' : '1.5px',
-                  boxShadow: inv.isEquipped ? `0 0 12px ${getEnhanceColor(inv.enhanceLevel).glow}` : 'none',
+                  boxShadow: inv.isDestroyed
+                    ? '0 0 8px rgba(233,69,96,0.2)'
+                    : inv.isEquipped ? `0 0 12px ${getEnhanceColor(inv.enhanceLevel).glow}` : 'none',
                   borderRadius: '8px',
+                  opacity: inv.isDestroyed ? 0.5 : 1,
+                  position: 'relative',
                 }}
               >
                 {inv.item.imageUrl ? (
-                  <img src={inv.item.imageUrl} alt={inv.item.name} />
+                  <img src={inv.item.imageUrl} alt={inv.item.name} style={inv.isDestroyed ? { filter: 'grayscale(100%)' } : undefined} />
                 ) : (
                   <span>IMG</span>
                 )}
                 {inv.quantity > 1 && (
                   <span className="qty-badge">x{inv.quantity}</span>
                 )}
-                {inv.enhanceLevel > 0 && (
+                {inv.isDestroyed ? (
+                  <span className="enhance-badge" style={{ background: 'linear-gradient(135deg, #e94560, #c0392b)', fontSize: '0.5rem' }}>파괴</span>
+                ) : inv.enhanceLevel > 0 ? (
                   <span className="enhance-badge">+{inv.enhanceLevel}</span>
-                )}
+                ) : null}
                 {inv.isEquipped && (
                   <div style={{ position: 'absolute', top: 0, right: 0, width: '100%', height: '100%', overflow: 'hidden', pointerEvents: 'none' }}>
                     <div style={{
@@ -364,7 +411,7 @@ function InventoryContent() {
                   </div>
                 )}
               </div>
-              <span className="item-name" style={{ color: getEnhanceColor(inv.enhanceLevel).color, fontSize: '0.6rem' }}>
+              <span className="item-name" style={{ color: inv.isDestroyed ? '#e94560' : getEnhanceColor(inv.enhanceLevel).color, fontSize: '0.6rem' }}>
                 {inv.item.name}
               </span>
             </div>

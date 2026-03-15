@@ -68,6 +68,7 @@ export interface Item {
   baseAttack: number;
   baseDefense: number;
   baseHp: number;
+  healHp: number;
   imageUrl?: string | null;
   sellPrice: number;
   buyPrice?: number;
@@ -83,6 +84,7 @@ export interface InventoryItem {
   isEquipped: boolean;
   equippedSlot?: EquipSlot;
   quantity: number;
+  isDestroyed: boolean;
 }
 
 // ===== Dungeon =====
@@ -107,6 +109,8 @@ export interface Monster {
   defense: number;
   expReward: number;
   goldReward: number;
+  isBoss: boolean;
+  sortOrder: number;
   imageUrl?: string | null;
   dropTables?: DropTable[];
 }

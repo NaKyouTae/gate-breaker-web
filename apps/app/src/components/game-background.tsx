@@ -281,8 +281,8 @@ export function GameBackground({ children }: GameBackgroundProps) {
       const game = new Phaser.Game({
         type: Phaser.CANVAS,
         parent: container,
-        width: Math.max(container.clientWidth, window.innerWidth),
-        height: Math.max(container.clientHeight, window.innerHeight),
+        width: container.clientWidth,
+        height: container.clientHeight,
         transparent: true,
         scene: GateScene,
         fps: { target: 30, forceSetTimeOut: true },
@@ -307,8 +307,8 @@ export function GameBackground({ children }: GameBackgroundProps) {
       const handleResize = () => {
         if (game && container) {
           game.scale.resize(
-            Math.max(container.clientWidth, window.innerWidth),
-            Math.max(container.clientHeight, window.innerHeight),
+            container.clientWidth,
+            container.clientHeight,
           );
         }
       };
@@ -341,7 +341,7 @@ export function GameBackground({ children }: GameBackgroundProps) {
       ref={containerRef}
       style={{
         position: 'relative',
-        width: '100vw',
+        width: '100%',
         height: '100dvh',
         overflow: 'hidden',
         background: '#070711',

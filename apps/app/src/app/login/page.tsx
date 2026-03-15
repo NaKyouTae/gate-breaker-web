@@ -1,12 +1,36 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/auth-context';
 import { auth } from '@gate-breaker/api-client';
 import { GameBackground } from '@/components/game-background';
 
 export default function LoginPage() {
+  const { isAuthenticated, isLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.replace('/dashboard');
+    }
+  }, [isAuthenticated, isLoading, router]);
+
   const handleKakaoLogin = () => {
     window.location.href = auth.kakaoUrl();
   };
+
+  if (isLoading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <div style={{ color: '#666', fontSize: '1.2rem' }}>로딩 중...</div>
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return null;
+  }
 
   return (
     <div
@@ -21,7 +45,7 @@ export default function LoginPage() {
         <div
           style={{
             width: '100%',
-            minHeight: '100dvh',
+            minHeight: '100%',
             display: 'flex',
             alignItems: 'flex-end',
             justifyContent: 'center',

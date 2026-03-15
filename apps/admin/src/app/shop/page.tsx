@@ -86,6 +86,17 @@ export default function ShopPage() {
     }
   };
 
+  const removeFromShop = async (id: string, name: string) => {
+    if (!confirm(`"${name}" 아이템을 상점에서 해제하시겠습니까?`)) return;
+    try {
+      await admin.shop.remove(id);
+      addToast('상점에서 해제했습니다.', 'success');
+      await fetchRows();
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : '상점 해제에 실패했습니다.', 'error');
+    }
+  };
+
   // 등록 모달
   const openRegisterModal = async () => {
     setRegisterOpen(true);
@@ -130,7 +141,7 @@ export default function ShopPage() {
   );
 
   const register = async () => {
-    if (!selectedItemId || registerPrice <= 0) return;
+    if (!selectedItemId || registerPrice < 0) return;
     setRegisterLoading(true);
     try {
       await admin.shop.update(selectedItemId, { buyPrice: registerPrice });
@@ -172,7 +183,10 @@ export default function ShopPage() {
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
                 <p style={{ fontSize: 15, fontWeight: 700, color: '#eee' }}>{item.name}</p>
-                <AdminActionIconButton kind="edit" onClick={() => openEditModal(item)} />
+                <div style={{ display: 'flex', gap: 4 }}>
+                  <AdminActionIconButton kind="edit" onClick={() => openEditModal(item)} />
+                  <AdminActionIconButton kind="delete" onClick={() => removeFromShop(item.id, item.name)} />
+                </div>
               </div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
                 <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, backgroundColor: '#12122a', color: '#aaa' }}>
@@ -185,11 +199,21 @@ export default function ShopPage() {
                   {RARITY_LABELS[item.rarity]}
                 </span>
               </div>
-              <div style={{ backgroundColor: '#12122a', borderRadius: 8, padding: '8px 12px' }}>
-                <p style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>현재 가격</p>
-                <p style={{ fontSize: 16, fontWeight: 700, color: '#fbbf24' }}>
-                  {(item.buyPrice || 0).toLocaleString()} G
-                </p>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ backgroundColor: '#12122a', borderRadius: 8, padding: '8px 12px', flex: 1 }}>
+                  <p style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>현재 가격</p>
+                  <p style={{ fontSize: 16, fontWeight: 700, color: '#fbbf24' }}>
+                    {(item.buyPrice || 0).toLocaleString()} G
+                  </p>
+                </div>
+                {item.type === 'CONSUMABLE' && (item.healHp ?? 0) > 0 && (
+                  <div style={{ backgroundColor: '#12122a', borderRadius: 8, padding: '8px 12px', flex: 1 }}>
+                    <p style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>회복력</p>
+                    <p style={{ fontSize: 16, fontWeight: 700, color: '#22c55e' }}>
+                      +{item.healHp} HP
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           ))}

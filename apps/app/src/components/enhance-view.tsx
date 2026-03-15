@@ -464,7 +464,7 @@ export function EnhanceView({ item, gold, onClose, onComplete }: EnhanceViewProp
                     : '0 4px 20px rgba(124, 58, 237, 0.4), 0 0 40px rgba(167, 139, 250, 0.15)',
                 }}
               >
-                {enhancing ? '강화 중...' : gold !== undefined && gold < enhanceInfo.cost ? '골드가 부족합니다' : '강화 시도'}
+                {gold !== undefined && gold < enhanceInfo.cost ? '골드가 부족합니다' : '강화 시도'}
               </button>
             </div>
           </div>
