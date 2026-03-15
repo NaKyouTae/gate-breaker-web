@@ -8,6 +8,7 @@ import { useAuth } from '@/context/auth-context';
 import { EnhanceView } from '@/components/enhance-view';
 import { FullscreenOverlay } from '@/components/fullscreen-overlay';
 import { getEnhanceColor } from '@/lib/enhance-color';
+import { getEnhanceSellPrice } from '@/lib/enhance-sell-price';
 import type { InventoryItem, ItemType } from '@gate-breaker/types';
 
 const TYPE_LABELS: Record<ItemType, string> = {
@@ -305,7 +306,7 @@ function InventoryContent() {
                 {!detailItem.isEquipped && (
                   <div style={{ display: 'flex', gap: 10 }}>
                     <button className="btn-action ghost" disabled={actionLoading} onClick={() => handleSell(detailItem)} style={{ padding: '12px 0', fontSize: '0.85rem' }}>
-                      판매 ({detailItem.item.sellPrice}G)
+                      판매 ({getEnhanceSellPrice(detailItem.enhanceLevel).toLocaleString()}G)
                     </button>
                     <button className="btn-action danger" disabled={actionLoading} onClick={() => handleDiscard(detailItem)} style={{ padding: '12px 0', fontSize: '0.85rem' }}>
                       버리기

@@ -205,6 +205,9 @@ export interface EnhanceInfo {
   nextLevel?: number;
   successRate: number;
   failurePenalty: string;
+  maintainRate?: number;
+  downgradeRate?: number;
+  destroyRate?: number;
   cost: number;
 }
 

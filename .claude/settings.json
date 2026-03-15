@@ -66,7 +66,8 @@
       "Bash(grep -n \"$transaction\\\\|tx\\\\.\" /Users/nakyutae/personal/git/gate-breaker/gate-breaker-server/src/bootstrap/weapon-catalog.seed.ts)",
       "Bash(grep -r \"updateGold\\\\|modifyGold\\\\|addGold\" /Users/nakyutae/personal/git/gate-breaker/gate-breaker-server/src --include=*.ts)",
       "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web -type f \\\\\\(-name *chat* -o -name *room* -o -name *channel* -o -name *message* \\\\\\))",
-      "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web -type f \\\\\\(-name *socket* -o -name *websocket* -o -name *lobby* \\\\\\))"
+      "Bash(find /Users/nakyutae/personal/git/gate-breaker/gate-breaker-web -type f \\\\\\(-name *socket* -o -name *websocket* -o -name *lobby* \\\\\\))",
+      "Bash(node -e \":*)"
     ],
     "additionalDirectories": [
       "/Users/nakyutae/personal/git/gate-breaker/gate-breaker-web/apps/admin/.next",

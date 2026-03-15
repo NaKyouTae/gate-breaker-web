@@ -8,27 +8,27 @@ import { EnhanceEffect, type EnhanceEffectType } from '@/components/enhance-effe
 import { FullscreenOverlay } from '@/components/fullscreen-overlay';
 import { getEnhanceColor } from '@/lib/enhance-color';
 
-const ENHANCE_GRADE_TABLE: { level: number; atkChange: number; successRate: number; failureResult: string }[] = [
-  { level: 1,  atkChange: 1, successRate: 100, failureResult: '유지' },
-  { level: 2,  atkChange: 1, successRate: 95,  failureResult: '유지' },
-  { level: 3,  atkChange: 1, successRate: 90,  failureResult: '유지' },
-  { level: 4,  atkChange: 1, successRate: 85,  failureResult: '유지' },
-  { level: 5,  atkChange: 1, successRate: 75,  failureResult: '유지' },
-  { level: 6,  atkChange: 1, successRate: 65,  failureResult: '유지' },
-  { level: 7,  atkChange: 1, successRate: 55,  failureResult: '유지' },
-  { level: 8,  atkChange: 1, successRate: 45,  failureResult: '유지' },
-  { level: 9,  atkChange: 1, successRate: 40,  failureResult: '유지' },
-  { level: 10, atkChange: 1, successRate: 35,  failureResult: '유지' },
-  { level: 11, atkChange: 2, successRate: 30,  failureResult: '-1' },
-  { level: 12, atkChange: 2, successRate: 25,  failureResult: '-1' },
-  { level: 13, atkChange: 2, successRate: 20,  failureResult: '-1' },
-  { level: 14, atkChange: 2, successRate: 17,  failureResult: '-1' },
-  { level: 15, atkChange: 2, successRate: 15,  failureResult: '-1' },
-  { level: 16, atkChange: 3, successRate: 12,  failureResult: '-2' },
-  { level: 17, atkChange: 3, successRate: 10,  failureResult: '-2' },
-  { level: 18, atkChange: 3, successRate: 7,   failureResult: '파괴' },
-  { level: 19, atkChange: 3, successRate: 5,   failureResult: '파괴' },
-  { level: 20, atkChange: 3, successRate: 3,   failureResult: '파괴' },
+const ENHANCE_GRADE_TABLE: { level: number; atkChange: number; successRate: number; maintainRate: number; downgradeRate: number; destroyRate: number }[] = [
+  { level: 1,  atkChange: 1, successRate: 100, maintainRate: 0,  downgradeRate: 0,  destroyRate: 0 },
+  { level: 2,  atkChange: 1, successRate: 95,  maintainRate: 5,  downgradeRate: 0,  destroyRate: 0 },
+  { level: 3,  atkChange: 1, successRate: 90,  maintainRate: 10, downgradeRate: 0,  destroyRate: 0 },
+  { level: 4,  atkChange: 1, successRate: 85,  maintainRate: 15, downgradeRate: 0,  destroyRate: 0 },
+  { level: 5,  atkChange: 1, successRate: 75,  maintainRate: 25, downgradeRate: 0,  destroyRate: 0 },
+  { level: 6,  atkChange: 1, successRate: 65,  maintainRate: 35, downgradeRate: 0,  destroyRate: 0 },
+  { level: 7,  atkChange: 1, successRate: 55,  maintainRate: 45, downgradeRate: 0,  destroyRate: 0 },
+  { level: 8,  atkChange: 1, successRate: 45,  maintainRate: 55, downgradeRate: 0,  destroyRate: 0 },
+  { level: 9,  atkChange: 1, successRate: 40,  maintainRate: 60, downgradeRate: 0,  destroyRate: 0 },
+  { level: 10, atkChange: 1, successRate: 35,  maintainRate: 65, downgradeRate: 0,  destroyRate: 0 },
+  { level: 11, atkChange: 2, successRate: 36,  maintainRate: 40, downgradeRate: 24, destroyRate: 0 },
+  { level: 12, atkChange: 2, successRate: 31,  maintainRate: 38, downgradeRate: 31, destroyRate: 0 },
+  { level: 13, atkChange: 2, successRate: 26,  maintainRate: 35, downgradeRate: 39, destroyRate: 0 },
+  { level: 14, atkChange: 2, successRate: 23,  maintainRate: 33, downgradeRate: 44, destroyRate: 0 },
+  { level: 15, atkChange: 2, successRate: 21,  maintainRate: 30, downgradeRate: 49, destroyRate: 0 },
+  { level: 16, atkChange: 3, successRate: 19,  maintainRate: 34, downgradeRate: 46, destroyRate: 1 },
+  { level: 17, atkChange: 3, successRate: 17,  maintainRate: 30, downgradeRate: 51, destroyRate: 2 },
+  { level: 18, atkChange: 3, successRate: 14,  maintainRate: 26, downgradeRate: 57, destroyRate: 3 },
+  { level: 19, atkChange: 3, successRate: 11,  maintainRate: 24, downgradeRate: 61, destroyRate: 4 },
+  { level: 20, atkChange: 3, successRate: 9,   maintainRate: 21, downgradeRate: 65, destroyRate: 5 },
 ];
 
 
@@ -278,10 +278,11 @@ export function EnhanceView({ item, gold, onClose, onComplete }: EnhanceViewProp
               }}>
                 <div style={{ fontSize: 11, color: '#999', marginBottom: 4, fontWeight: 600 }}>강화 정보</div>
                 {[
-                  { label: '확률', value: `${enhanceInfo.successRate}%`, color: '#a78bfa' },
-                  { label: '성공', value: `+${enhanceInfo.nextLevel ?? enhanceInfo.currentLevel}`, color: '#2ecc71' },
-                  { label: '실패', value: formatFailurePenalty(enhanceInfo.failurePenalty, enhanceInfo.currentLevel), color: '#e94560' },
-                ].map((row, idx) => (
+                  { label: '성공', value: `${enhanceInfo.successRate}%`, color: '#2ecc71' },
+                  { label: '유지', value: enhanceInfo.maintainRate != null && enhanceInfo.maintainRate > 0 ? `${enhanceInfo.maintainRate}%` : '-', color: '#a78bfa' },
+                  { label: '하락', value: enhanceInfo.downgradeRate != null && enhanceInfo.downgradeRate > 0 ? `${enhanceInfo.downgradeRate}%` : '-', color: '#ff8c00' },
+                  { label: '파괴', value: enhanceInfo.destroyRate != null && enhanceInfo.destroyRate > 0 ? `${enhanceInfo.destroyRate}%` : '-', color: '#e94560' },
+                ].map((row, idx, arr) => (
                   <div
                     key={row.label}
                     style={{
@@ -289,7 +290,7 @@ export function EnhanceView({ item, gold, onClose, onComplete }: EnhanceViewProp
                       justifyContent: 'space-between',
                       alignItems: 'center',
                       padding: '7px 0',
-                      borderBottom: idx < 2 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+                      borderBottom: idx < arr.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
                     }}
                   >
                     <span style={{ color: '#999', fontSize: 13 }}>{row.label}</span>
@@ -387,28 +388,32 @@ export function EnhanceView({ item, gold, onClose, onComplete }: EnhanceViewProp
                   </div>
                   <div style={{
                     display: 'grid',
-                    gridTemplateColumns: '1fr 1fr 1fr 1fr',
+                    gridTemplateColumns: '0.8fr 1fr 1fr 1fr 1fr',
                     gap: '2px 0',
                     fontSize: 11,
                     textAlign: 'center',
                   }}>
                     <span style={{ color: '#666', fontWeight: 600 }}>강화</span>
-                    <span style={{ color: '#666', fontWeight: 600 }}>확률</span>
-                    <span style={{ color: '#666', fontWeight: 600 }}>ATK</span>
-                    <span style={{ color: '#666', fontWeight: 600 }}>실패</span>
+                    <span style={{ color: '#666', fontWeight: 600 }}>성공</span>
+                    <span style={{ color: '#666', fontWeight: 600 }}>유지</span>
+                    <span style={{ color: '#666', fontWeight: 600 }}>하락</span>
+                    <span style={{ color: '#666', fontWeight: 600 }}>파괴</span>
                     {ENHANCE_GRADE_TABLE.map((row) => (
                       <React.Fragment key={row.level}>
                         <span style={{ color: row.level > 15 ? '#e94560' : row.level > 10 ? '#ff8c00' : '#ccc', fontWeight: 700 }}>
                           +{row.level}
                         </span>
-                        <span style={{ color: '#a78bfa', fontWeight: 600 }}>
+                        <span style={{ color: '#2ecc71', fontWeight: 600 }}>
                           {row.successRate}%
                         </span>
-                        <span style={{ color: '#2ecc71', fontWeight: 600 }}>
-                          +{row.atkChange}
+                        <span style={{ color: '#a78bfa', fontWeight: 600 }}>
+                          {row.maintainRate}%
                         </span>
-                        <span style={{ color: row.level > 15 ? '#e94560' : '#999', fontWeight: 600, fontSize: 11 }}>
-                          {row.failureResult}
+                        <span style={{ color: '#ff8c00', fontWeight: 600 }}>
+                          {row.downgradeRate > 0 ? `${row.downgradeRate}%` : '-'}
+                        </span>
+                        <span style={{ color: '#e94560', fontWeight: 600 }}>
+                          {row.destroyRate > 0 ? `${row.destroyRate}%` : '-'}
                         </span>
                       </React.Fragment>
                     ))}
